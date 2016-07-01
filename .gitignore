@@ -1,0 +1,11 @@
+# Artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Misc
+*.*.swp
+*~
+*#
+
