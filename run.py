@@ -1,4 +1,5 @@
-# __init__.py
+#!/usr/bin/env python3
+# run.py
 #
 # darch - Difference Archiver
 # Copyright (c) 2015-2016 Ammon Smith
@@ -17,10 +18,34 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__all__ = ["main"]
+import darch
+import ft_diff
+import mhash
+import os
+import sys
 
-from .main import main
+MODULE_DICT = {
+    "--darch": darch,
+    "--ftdiff": ft_diff,
+    "--mhash": mhash,
+}
 
 if __name__ == "__main__":
-    main()
+    module = None
+    for i in range(1, len(sys.argv)):
+        module = MODULE_DICT.get(sys.argv[i], None)
+
+        if module:
+            sys.argv.pop(i)
+            module.main()
+
+    if module is None:
+        program_name = os.path.basename(sys.argv[0])
+
+        if program_name == "ftdiff":
+            ft_diff.main()
+        elif program_name == "mhash":
+            mhash.main()
+        else:
+            darch.main()
 

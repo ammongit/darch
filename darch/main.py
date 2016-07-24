@@ -19,6 +19,7 @@
 
 import atexit
 import signal
+import sys
 
 
 def handle_signal(signum, frame):
