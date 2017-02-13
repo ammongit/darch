@@ -19,5 +19,8 @@
 #
 
 __all__ = [
+    'Archive'
 ]
+
+from .archive import Archive
 

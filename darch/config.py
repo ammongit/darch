@@ -97,11 +97,8 @@ def default_config():
     return DEFAULT_CONFIG.copy()
 
 def load_config(fn):
-    if fn is None:
-        config = default_config()
-    else:
-        with open(fn, 'r') as fh:
-            config  = json.load(fh)
+    with open(fn, 'r') as fh:
+        config  = json.load(fh)
     sanity_check(config)
     return config
 
