@@ -69,16 +69,23 @@ if __name__ == '__main__':
         archv = Archive(archive, config)
         if archv.exists():
             archv.create()
+            archv.clear_recent()
             exit()
 
         if args.hash_only:
             archv.hash()
+            archv.clear_recent()
             exit()
 
         if archv.extracted():
-            archv.update()
+            if args.full:
+                args.create()
+            else:
+                archv.update()
             if not args.update_only:
                 archv.delete()
         else:
             archv.extract()
+
+        archv.clear_recent()
 

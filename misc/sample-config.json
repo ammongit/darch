@@ -1,5 +1,7 @@
 {
+    "compression": 5,
     "encrypted": true,
+    "test_archive": true,
     "clear-recent": true,
 
     "extensions": [

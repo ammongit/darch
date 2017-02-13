@@ -1,7 +1,8 @@
-# __init__.py
+#
+# tree.py
 #
 # darch - Difference Archiver
-# Copyright (c) 2015-2016 Ammon Smith
+# Copyright (c) 2015-2017 Ammon Smith
 #
 # darch is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,10 +18,11 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__all__ = ["main"]
+__all__ = [
+    'Tree',
+]
 
-from .main import main
-
-if __name__ == "__main__":
-    main()
+class Tree(object):
+    def __init__(self):
+        pass
 

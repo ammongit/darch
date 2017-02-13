@@ -25,7 +25,9 @@ __all__ = [
 ]
 
 DEFAULT_CONFIG = {
+    'compression': 5,
     'encrypted': True,
+    'test-archive': True,
     'clear-recent': True,
 
     'extensions': [
@@ -47,7 +49,7 @@ DEFAULT_CONFIG = {
         'tiff',
         'webm',
         'webp',
-        'wmv'
+        'wmv',
     ],
 
     'rename-extensions': {
@@ -71,7 +73,9 @@ DEFAULT_CONFIG = {
 }
 
 CONFIG_TYPES = {
+    'compression': int,
     'encrypted': bool,
+    'test-archive': bool,
     'clear-recent': bool,
 
     'extensions': (list, str),
