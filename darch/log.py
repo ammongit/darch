@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# run.py
+#
+# log.py
 #
 # darch - Difference Archiver
 # Copyright (c) 2015-2016 Ammon Smith
@@ -18,34 +18,30 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import darch
-import ft_diff
-import mhash
-import os
+__all__ = [
+    'log',
+]
+
 import sys
 
-MODULE_DICT = {
-    "--darch": darch,
-    "--ftdiff": ft_diff,
-    "--mhash": mhash,
-}
+class Logger(object):
+    def __init__(self):
+        self.line_length = 0;
+        self.needs_newline = False
 
-if __name__ == "__main__":
-    module = None
-    for i in range(1, len(sys.argv)):
-        module = MODULE_DICT.get(sys.argv[i], None)
-
-        if module:
-            sys.argv.pop(i)
-            module.main()
-
-    if module is None:
-        program_name = os.path.basename(sys.argv[0])
-
-        if program_name == "ftdiff":
-            ft_diff.main()
-        elif program_name == "mhash":
-            mhash.main()
+    def __call__(self, string, perm=False):
+        if perm:
+            self.line_length = 0
+            if self.needs_newline:
+                print("\n")
+            print(string)
         else:
-            darch.main()
+            if log.line_length:
+                print("\r%s\r" % (' ' * log.line_length), end='')
+            print(string, end='')
+            log.line_length = len(string)
+            sys.stdout.flush()
+        log.needs_newline = not perm
+
+log = Logger()
 

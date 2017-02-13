@@ -1,3 +1,4 @@
+#
 # config.py
 #
 # darch - Difference Archiver
@@ -17,42 +18,111 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+__all__ = [
+    'load_config',
+    'sanity_check',
+]
+
+DEFAULT_CONFIG = {
+    'compression': '7z',
+    'encrypted': True,
+    'clear-recent': True,
+
+    'extensions': [
+        'aac',
+        'bmp',
+        'gif',
+        'jpeg',
+        'jpg',
+        'm4a',
+        'mkv',
+        'mpeg',
+        'mp3',
+        'mp4',
+        'ogg',
+        'opus',
+        'png',
+        'svg',
+        'tif',
+        'tiff',
+        'webm',
+        'webp',
+        'wmv'
+    ],
+
+    'rename-extensions': {
+        'jpeg': 'jpg',
+    },
+
+    'ignore-extensions': [
+        'json',
+        'pickle',
+    ],
+
+    'output-dir': '.darch',
+    'hash-algorithm': 'sha1',
+    'ignore-file': '.ignore',
+
+    'write-hash-log': 'hashed.log',
+    'ask-confirmation': True,
+    'use-trash': False,
+    'dry-run': False,
+}
+
+CONFIG_TYPES = {
+    'compression': str,
+    'encrypted': bool,
+    'clear-recent': bool,
+
+    'extensions': (list, str),
+    'rename-extensions': (dict, None),
+    'ignore-extensions': (list, str),
+
+    'output-dir': str,
+    'hash-algorithm': str,
+    'ignore-file': str,
+
+    'write-hash-log': str,
+    'ask-confirmation': bool,
+    'use-trash': bool,
+    'dry-run': bool,
+}
+
+from .log import log
+
 import json
 
+def load_config(fn):
+    if fn is None:
+        config = DEFAULT_CONFIG
+    else:
+        with open(fn, 'r') as fh:
+            config  = json.load(fh)
+    sanity_check(config)
+    return config
 
-def sanity_test_config(config):
-    success = True
+def sanity_check(config):
+    def die(name, obj, join='for'):
+        log("Error: invalid type %s '%s': %s" %
+                (join, name, type(obj)), True)
+        exit(1)
 
-    if "archive-directory" not in config.keys():
-        print("Key \"archive-directory\" not specified in config file.", file=sys.stderr)
-        success = False
-    elif not os.path.isdir(os.path.expanduser(config["archive-directory"])):
-        print("Specified archive directory does not exist: %s" % config["archive-directory"], file=sys.stderr)
-        success = False
+    for key in config.keys():
+        try:
+            true_type = CONFIG_TYPES[key]
+        except KeyError:
+            log("Warning: config option ignored: %s" % key, True)
+            continue
 
-    if "lock-file" not in config.keys():
-        print("Key \"lock-file\" not found, using default.", file=sys.stderr)
-        config["lock-file"] = ".%s.lock"
-
-    if "hash-script" not in config.keys():
-        print("Key \"hash-script\" not specified in config file.", file=sys.stderr)
-        success = False
-
-    if "back-up-old-archive" not in config.keys() or type(config["back-up-old-archive"]) != bool:
-        print("Key \"back-up-old-archive\" not found or invalid, backing up archive anyways.", file=sys.stderr)
-        config["back-up-old-archive"] = True
-
-    if "clear-recent" not in config.keys() or type(config["clear-recent"]) != bool:
-        print("Key \"clear-recent\" not found or invalid, not clearing recent files.", file=sys.stderr)
-        config["clear-recent"] = False
-
-    if "test-archive" not in config.keys() or type(config["test-archive"]) != bool:
-        print("Key \"test-archive\" not found or invalid, not testing archive.", file=sys.stderr)
-        config["test-archive"] = True
-
-    config["archive-directory"] = os.path.expanduser(config["archive-directory"])
-    config["hash-script"] = os.path.expanduser(config["hash-script"])
-    config["archive-file"] = os.path.join(config["archive-directory"], name + ".7z")
-
-    return success
+        item = config[key]
+        if type(true_type) is tuple:
+            if type(item) != true_type[0]:
+                die(key, item)
+            if true_type[1]:
+                for val in item:
+                    if type(val) != true_type[1]:
+                        die(val, item, 'in')
+        else:
+            if type(item) != true_type:
+                die(key, item)
 

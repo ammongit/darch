@@ -1,4 +1,3 @@
-#
 # __init__.py
 #
 # darch - Difference Archiver
@@ -18,6 +17,10 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__all__ = [
-]
+__all__ = ["main"]
+
+from .main import main
+
+if __name__ == "__main__":
+    main()
 
