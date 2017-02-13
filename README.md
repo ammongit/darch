@@ -26,7 +26,7 @@ There are a number of options available. Here are a couple that may be of intere
 ### Configuration
 Each archive can have its own configuration file by placing an appropriately-formatted `darch.json` in the root directory.
 
-There is also a per-user configuration that contains information beyond what the local config file provides. It is located in `$XDG_CONFIG_HOME/darch.conf`, or `~/.config/darch.conf` if there is no `$XDG_CONFIG_HOME` environmental variable.
+There is also a per-user configuration that contains information beyond what the local config file provides. It is located in `$XDG_CONFIG_HOME/darch.json`, or `~/.config/darch.json` if there is no `$XDG_CONFIG_HOME` environmental variable.
 
 #### Ignoring files
 Since files are renamed, the original filename is destroyed. Sometimes this is not desirable behavior. For instance, a comic strip folder would have images inside in a specific order based on the filename.
