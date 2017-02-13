@@ -2,7 +2,7 @@
 # config.py
 #
 # darch - Difference Archiver
-# Copyright (c) 2015-2016 Ammon Smith
+# Copyright (c) 2015-2017 Ammon Smith
 #
 # darch is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
