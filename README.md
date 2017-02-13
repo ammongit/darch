@@ -14,12 +14,14 @@ python -m darch [flags] archive-name...
 ```
 
 There are a number of options available. Here are a couple that may be of interest:
+```
 | Flag | Description                                       |
 |------|---------------------------------------------------|
 | `-u` | Update the archive only, leaving files on disk.   |
 | `-m` | Perform media hash only, no archive manipulation. |
 | `-n` | Dry run. No changes are made on the filesystem.   |
 | `-F` | Full run. Recreate the archive from scratch.      |
+```
 
 ### Configuration
 Each archive can have its own configuration file by placing an appropriately-formatted `darch.json` in the root directory.
