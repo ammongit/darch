@@ -20,9 +20,20 @@
 
 __all__ = [
     'log',
+    'log_error',
+    'log_warn',
 ]
 
 import sys
+
+if sys.stdin.isatty():
+    RED_COLOR    = '\033[31m'
+    YELLOW_COLOR = '\033[33m'
+    RESET_COLOR  = '\033[0m'
+else:
+    RED_COLOR    = ''
+    YELLOW_COLOR = ''
+    RESET_COLOR  = ''
 
 class Logger(object):
     def __init__(self):
@@ -43,5 +54,14 @@ class Logger(object):
             sys.stdout.flush()
         log.needs_newline = not perm
 
+    def print_error(self, string):
+        self("%sError%s: %s" % (RED_COLOR, RESET_COLOR, string), True)
+        exit(1)
+
+    def print_warn(self, string):
+        self("%sWarning%s: %s" % (YELLOW_COLOR, RESET_COLOR, string), True)
+
 log = Logger()
+log_error = log.print_error
+log_warn = log.print_warn
 

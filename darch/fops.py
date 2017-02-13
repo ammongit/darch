@@ -25,16 +25,21 @@ __all__ = [
 
 import io
 import os
+import shutil
+import subprocess
 
 class FileOps(object):
     def __init__(self):
         self.open = open
 
-    def exists(self, path):
-        return os.path.exists(path)
+    def call(self, arguments, *args, **kwargs):
+        return subprocess.call(arguments, *args, **kwargs)
 
-    def stat(self, path):
-        return os.stat(path)
+    def copy(self, old_path, new_path):
+        shutil.copy2(old_path, new_path)
+
+    def remove(self, path):
+        os.remove(path)
 
 def _dummy_open(path, mode='r'):
     with open(path, 'r') as fh:
@@ -45,4 +50,13 @@ class ReadOnlyFileOps(FileOps):
     def __init__(self):
         FileOps.__init__(self)
         self.open = _dummy_open
+
+    def call(self, arguments, *args, **kwargs):
+        print("call: %s" % (' '.join(arguments)))
+
+    def copy(self, old_path, new_path):
+        print("copy: %s <- %s" % (new_path, old_path))
+
+    def remove(self, path):
+        print("remove: %s" % path)
 

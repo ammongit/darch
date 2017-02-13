@@ -24,6 +24,9 @@ __all__ = [
 
 from .config import default_config
 from .fops import FileOps, ReadOnlyFileOps
+from .log import log_error
+
+import os
 
 class Archive(object):
     def __init__(self, dir_path, config=None):
@@ -39,6 +42,9 @@ class Archive(object):
         else:
             self.fops = FileOps()
 
+        if os.path.exists(dir_path) and not os.path.isdir(dir_path):
+            log_error("Extracted path is not a directory.")
+
     def exists(self):
         return self.fops.exists(self.tarball_path)
 
@@ -47,4 +53,13 @@ class Archive(object):
 
     def backup(self):
         self.fops.copy(self.tarball_path, self.tarball_path + "~")
+
+    def create(self):
+        print("TODO: create")
+
+    def update(self):
+        print("TODO: update")
+
+    def delete(self):
+        print("TODO: delete")
 

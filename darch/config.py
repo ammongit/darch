@@ -89,7 +89,7 @@ CONFIG_TYPES = {
     'dry-run': bool,
 }
 
-from .log import log
+from .log import log, log_error, log_warn
 
 import json
 
@@ -104,15 +104,14 @@ def load_config(fn):
 
 def sanity_check(config):
     def die(name, obj, join='for'):
-        log("Error: invalid type %s '%s': %s" %
+        log_error("invalid type %s '%s': %s" %
                 (join, name, type(obj)), True)
-        exit(1)
 
     for key in config.keys():
         try:
             true_type = CONFIG_TYPES[key]
         except KeyError:
-            log("Warning: config option ignored: %s" % key, True)
+            log_warn("config option ignored: %s" % key, True)
             continue
 
         item = config[key]
@@ -128,6 +127,5 @@ def sanity_check(config):
                 die(key, item)
     for key in CONFIG_TYPES.keys():
         if key not in config:
-            log("Error: key '%s' not in config" % key)
-            exit(1)
+            log_error("key '%s' not in config" % key)
 
