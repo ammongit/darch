@@ -23,12 +23,28 @@ __all__ = [
 ]
 
 from .config import default_config
+from .fops import FileOps, ReadOnlyFileOps
 
 class Archive(object):
-    def __init__(self, dir_location, config=None):
+    def __init__(self, dir_path, config=None):
         if config is None:
             config = default_config()
 
-        pass
+        self.dir_path = dir_path
+        self.tarball_path = os.path.join(config['archive-dir'], dir_path + ".7z")
         self.config = config
+
+        if config['dry-run']:
+            self.fops = ReadOnlyFileOps()
+        else:
+            self.fops = FileOps()
+
+    def exists(self):
+        return self.fops.exists(self.tarball_path)
+
+    def extracted(self):
+        return self.fops.exists(self.dir_path)
+
+    def backup(self):
+        self.fops.copy(self.tarball_path, self.tarball_path + "~")
 
