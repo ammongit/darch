@@ -19,12 +19,12 @@
 #
 
 __all__ = [
+    'default_config',
     'load_config',
     'sanity_check',
 ]
 
 DEFAULT_CONFIG = {
-    'compression': '7z',
     'encrypted': True,
     'clear-recent': True,
 
@@ -60,6 +60,7 @@ DEFAULT_CONFIG = {
     ],
 
     'output-dir': '.darch',
+    'archive-dir': '.',
     'hash-algorithm': 'sha1',
     'ignore-file': '.ignore',
 
@@ -70,7 +71,6 @@ DEFAULT_CONFIG = {
 }
 
 CONFIG_TYPES = {
-    'compression': str,
     'encrypted': bool,
     'clear-recent': bool,
 
@@ -79,6 +79,7 @@ CONFIG_TYPES = {
     'ignore-extensions': (list, str),
 
     'output-dir': str,
+    'archive-dir': str,
     'hash-algorithm': str,
     'ignore-file': str,
 
@@ -92,9 +93,12 @@ from .log import log
 
 import json
 
+def default_config():
+    return DEFAULT_CONFIG.copy()
+
 def load_config(fn):
     if fn is None:
-        config = DEFAULT_CONFIG
+        config = default_config()
     else:
         with open(fn, 'r') as fh:
             config  = json.load(fh)
@@ -125,4 +129,8 @@ def sanity_check(config):
         else:
             if type(item) != true_type:
                 die(key, item)
+    for key in CONFIG_TYPES.keys():
+        if key not in config:
+            log("Error: key '%s' not in config" % key)
+            exit(1)
 

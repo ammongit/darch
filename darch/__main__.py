@@ -23,19 +23,25 @@ __all__ = [
 ]
 
 DESCRIPTION    = "Manage a hashed media archive."
-HELP_DRYRUN    = "Don't actually do anything, just print the results."
 HELP_CONFIG    = "Specify the configuration file."
+HELP_DRYRUN    = "Don't actually do anything, just print the results."
+HELP_UPDATE    = "Update the archive only, leaving the files extracted."
+HELP_FULL      = "Recreate the full archive. Doesn't use the difference algorithm."
 HELP_ARGUMENTS = "The archives you wish to operate on."
 
+from .archive import Archive
 from .config import load_config
 
 import argparse
+import os
 import sys
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('-c', '--config', help=HELP_CONFIG)
     parser.add_argument('-n', '--dry-run', action='store_true', default=None, help=HELP_DRYRUN)
+    parser.add_argument('-u', '--update-only', action='store_true', help=HELP_UPDATE)
+    parser.add_argument('-F', '--full', action='store_true', help=HELP_FULL)
     parser.add_argument('archive-dir', nargs='+', help=HELP_ARGUMENTS)
     args = parser.parse_args()
 
@@ -45,5 +51,12 @@ if __name__ == '__main__':
     if args.dry_run is not None:
         config['dry-run'] = args.dry_run
 
-    print(config)
+    for archive in archives:
+        archv = Archive(archive, config)
+        if archv.extracted():
+            archv.update()
+            if not args.update_only:
+                archv.delete()
+        else:
+            archv.extract()
 

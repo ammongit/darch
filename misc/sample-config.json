@@ -1,5 +1,4 @@
 {
-    "compression": "7z",
     "encrypted": true,
     "clear-recent": true,
 
@@ -35,6 +34,7 @@
     ],
     
     "output-dir": ".darch",
+    "archive-dir": ".",
     "hash-algorithm": "sha1",
     "ignore-file": ".ignore",
 
