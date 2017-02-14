@@ -64,19 +64,22 @@ class Tree(object):
                 full_path = os.path.join(dirpath, filename)
                 path = full_path[offset:]
                 st = os.stat(full_path)
-                hashsum = self.hash(full_path)
 
                 # Add files to dirty list
-                entry = (st.st_ctime, st.st_mtime, hashsum)
                 try:
                     ctime, mtime, hashsum2 = self.files[path]
-                    if hashsum != hashsum:
-                        self.dirty[path] = entry
+                    if st.st_ctime != ctime or st.st_mtime != mtime:
+                        hashsum = self.hash(full_path)
+                    else:
+                        hashsum = None
                 except KeyError:
-                    self.dirty[path] = entry
+                    hashsum = self.hash(full_path)
 
-                self.hashes[hashsum] = self.hashes.get(hashsum, [])
-                self.hashes[hashsum].append(path)
+                entry = (st.st_ctime, st.st_mtime, hashsum)
+                if hashsum:
+                    self.dirty[path] = entry
+                    self.hashes[hashsum] = self.hashes.get(hashsum, [])
+                    self.hashes[hashsum].append(path)
 
         # Find removed files
         for path, entry in self.files:
