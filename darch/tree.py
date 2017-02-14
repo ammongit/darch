@@ -32,7 +32,7 @@ class Tree(object):
     def __init__(self, main_dir, config, fops):
         self.files = {}
         self.dirty = {}
-        self.removed = []
+        self.to_remove = []
         self.hashes = {}
         self.fops = fops
         self.config = config
@@ -49,15 +49,16 @@ class Tree(object):
             log_error("Archive main directory does not exist: %s" % self.main_dir)
         if not os.path.isdir(self.data_dir):
             self.fops.mkdir(self.data_dir)
+        self._read(True)
         self.scan()
-        self._read()
-        self.sync()
 
     def hash(self, path):
         with self.fops.open(path, 'rb') as fh:
             return self._hash(fh.read()).hexdigest()
 
     def scan(self):
+        print(self.files)
+
         offset = len(self.main_dir) + 1
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
             for filename in filenames:
@@ -83,20 +84,27 @@ class Tree(object):
                     self.hashes[hashsum].append(path)
 
         # Find removed files
-        for path, entry in self.files:
+        for path, entry in self.files.items():
             if path not in self.dirty:
-                self.removed.append(path)
-                self.hashes[entry[2]].remove(path)
+                self.to_remove.append(path)
+                try:
+                    self.hashes[entry[2]].remove(path)
+                except KeyError:
+                    pass
+
+        print(self.to_remove)
+        print(self.dirty)
+        print(self.hashes)
 
     def update(self):
         for path, entry in self.dirty.items():
             self.files[path] = entry
 
-        for path in self.removed:
+        for path in self.to_remove:
             del self.files[path]
 
         self.dirty = {}
-        self.removed = []
+        self.to_remove = []
 
     def sync(self):
         path = os.path.join(self.data_dir, 'tree.pickle')
@@ -109,12 +117,15 @@ class Tree(object):
                 if len(paths) >= 2:
                     fh.write("%s: %s\n" % (hashsum, ';'.join(paths)))
 
-    def _read(self):
+    def _read(self, write=False):
         path = os.path.join(self.data_dir, 'tree.pickle')
         if not os.path.exists(path):
+            if write:
+                self.sync()
             return
         with self.fops.open(path, 'rb') as fh:
             obj = pickle.load(fh)
         if type(obj) != dict:
             log_error("Unpickled object is not a dict.")
+        self.files = obj
 

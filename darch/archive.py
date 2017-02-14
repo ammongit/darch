@@ -28,7 +28,6 @@ from .log import log, log_error
 from .tree import Tree
 
 from getpass import getpass
-
 import glob
 import os
 import subprocess
@@ -115,6 +114,8 @@ class Archive(object):
         if self.fops.call(arguments, stdout=subprocess.DEVNULL):
             log("Archive creation failed.")
         os.chdir(oldcwd)
+        self.tree.update()
+        self.tree.sync()
         self._test(pflag)
 
     def update(self):
@@ -135,9 +136,9 @@ class Archive(object):
             arguments += dirty
 
             if self.fops.call(arguments, stdout=subprocess.DEVNULL):
-                log_error("Archive update failed.")
+                log_error("Archive updates failed.")
 
-        removed = self.tree.removed
+        removed = self.tree.to_remove
         if removed:
             self._print_files('Removing', removed)
             arguments = [
