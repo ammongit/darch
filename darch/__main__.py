@@ -30,6 +30,7 @@ HELP_ARGUMENTS = "The archives you wish to operate on."
 
 from .archive import Archive
 from .config import default_config, load_config
+from .log import log, log_error
 
 import argparse
 import os
@@ -42,7 +43,7 @@ def config_path():
     else:
         return None
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('-c', '--config', help=HELP_CONFIG)
     parser.add_argument('-n', '--dry-run', action='store_true', default=None, help=HELP_DRYRUN)
@@ -66,18 +67,16 @@ if __name__ == '__main__':
         config['dry-run'] = args.dry_run
 
     for archive in archives:
+        name = os.path.basename(archive)
         archv = Archive(archive, config)
-        if archv.exists():
-            archv.create()
-            archv.clear_recent()
-            exit()
-
         if args.hash_only:
+            log("[Hashing] %s" % name, True)
             archv.hash()
             archv.clear_recent()
             exit()
 
         if archv.extracted():
+            log("[Compressing] %s" % name, True)
             if args.full:
                 args.create()
             else:
@@ -85,7 +84,15 @@ if __name__ == '__main__':
             if not args.update_only:
                 archv.delete()
         else:
+            log("[Extracting] %s" % name, True)
             archv.extract()
 
         archv.clear_recent()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        log("\n")
+        log_error("Interrupt by user.")
 

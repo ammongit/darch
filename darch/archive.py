@@ -31,17 +31,20 @@ from getpass import getpass
 
 import glob
 import os
+import subprocess
 
 class Archive(object):
     def __init__(self, dir_path, config=None):
-        self.dir_path = dir_path
         self.config = default_config if config is None else config
+        self.work_path = os.path.basename(dir_path)
+        self.dir_path = dir_path
         self.tarball_path = os.path.join(self.config['archive-dir'], dir_path + ".7z")
-        self.fops = ReadOnlyFileOps() if self.config['dry-run'] else FileOps()
         self.data_path = os.path.join(self.dir_path, self.config['output-dir'])
+
+        self._dir_check()
+
+        self.fops = ReadOnlyFileOps() if self.config['dry-run'] else FileOps()
         self.tree = Tree(self.data_path, self.fops)
-        if os.path.exists(dir_path) and not os.path.isdir(dir_path):
-            log_error("Extracted path is not a directory.")
 
     @staticmethod
     def _passwd_flag(confirm=False):
@@ -52,8 +55,31 @@ class Archive(object):
                 log_error("Passwords do not match.")
         return '-p' + passwd
 
-    def exists(self):
-        return os.path.exists(self.tarball_path)
+    def _dir_check(self):
+        dir_exists = os.path.exists(self.dir_path)
+        tar_exists = os.path.exists(self.tarball_path)
+        dat_exists = os.path.exists(self.data_path)
+
+        if dir_exists and not os.path.isdir(self.dir_path):
+            log_error("Extracted path is not a directory.")
+        if not (dir_exists or tar_exists):
+            log_error("Neither archive nor directory exists.")
+
+    def _test(self, pflag):
+        if self.config['test-archive']:
+            log("Testing archive...", True)
+            arguments = [
+                '7z',
+                't',
+                '-t7z',
+            ]
+            if self.config['encrypted']:
+                arguments.append(pflag)
+            arguments.append(self.tarball_path)
+
+            if self.fops.call(arguments):
+                log_error("Archive failed consistency test.")
+
 
     def extracted(self):
         return os.path.exists(self.dir_path)
@@ -78,32 +104,29 @@ class Archive(object):
 
         if self.fops.call(arguments):
             log("Archive creation failed.")
-
-        if self.config['test-archive']:
-            arguments = [
-                '7z',
-                't',
-                '-t7z',
-            ]
-            if self.config['encrypted']:
-                arguments.append(pflag)
-            arguments.append(self.tarball_path)
-
-            if self.fops.call(arguments):
-                log_error("Archive failed consistency test.")
+        self._test(pflag)
 
     def update(self):
         log("Updating archive...", True)
+        dirty = self.tree.dirty.keys()
+        if not dirty:
+            log("Nothing to update.", True)
+            return
+
         arguments = [
             '7z',
             'a',
-            self.tarball_path,
         ]
-        arguments += self.tree.dirty_files()
+        pflag = self._passwd_flag()
+        arguments.append(pflag)
+        arguments.append(self.tarball_path)
+        arguments += self.tree.dirty.keys()
 
-        if self.fops(arguments):
+        if self.fops.call(arguments):
             log_error("Archive update failed.")
-        tree.sync()
+        self.tree.update()
+        self.tree.sync()
+        self._test(pflag)
 
     def extract(self):
         log("Extracting archive...", True)
@@ -124,27 +147,27 @@ class Archive(object):
 
     def clear_recent(self):
         log("Clearing recent documents...", True)
-        path = os.path.expanduser("~/.local/share/recently-used.xbel")
+        path = os.path.expanduser('~/.local/share/recently-used.xbel')
         self.fops.truncate(path)
 
-        path = os.path.expanduser("~/.thumbnails")
+        path = os.path.expanduser('~/.thumbnails')
         if os.path.isdir(path):
-            path = os.path.expanduser("~/.thumbnails/normal/*")
+            path = os.path.expanduser('~/.thumbnails/normal/*')
             for fn in glob.glob(path):
                 self.fops.remove(fn)
 
-            path = os.path.expanduser("~/.thumbnails/large/*")
+            path = os.path.expanduser('~/.thumbnails/large/*')
             for fn in glob.glob(path):
                 self.fops.remove(fn)
         else:
-            path = os.path.expanduser("~/.cache")
+            path = os.path.expanduser('~/.cache')
             cache_dir = os.environ.get('XDG_CACHE_HOME', path)
 
-            path = os.path.expanduser("~/.cache/thumbnails/normal/*")
+            path = os.path.expanduser('~/.cache/thumbnails/normal/*')
             for fn in glob.glob(path):
                 self.fops.remove(fn)
 
-            path = os.path.expanduser("~/.cache/thumbnails/large/*")
+            path = os.path.expanduser('~/.cache/thumbnails/large/*')
             for fn in glob.glob(path):
                 self.fops.remove(fn)
 

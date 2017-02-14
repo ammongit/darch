@@ -33,20 +33,20 @@ class Tree(object):
         self.dirty = {}
         self.fops = fops
         self.directory = directory
-        if not os.path.isdir(self.directory):
-            self.fops.mkdir(self.directory)
 
         self.scan()
-        self.sync()
 
     def scan(self):
-        print("TODO tree.scan")
+        for dirpath, dirnames, filenames in os.walk(self.directory):
+            print(dirpath, dirnames, filenames)
 
     def update(self):
         print("TODO tree.update")
 
     def sync(self):
+        if not os.path.isdir(self.directory):
+            self.fops.mkdir(self.directory)
         path = os.path.join(self.directory, "tree.pickle")
-        with self.fops.open(path, 'w') as fh:
+        with self.fops.open(path, 'wb') as fh:
             pickle.dump(self.files, fh)
 
