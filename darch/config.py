@@ -61,7 +61,7 @@ DEFAULT_CONFIG = {
         'pickle',
     ],
 
-    'output-dir': '.darch',
+    'data-dir': '.darch',
     'archive-dir': '.',
     'hash-algorithm': 'sha1',
     'ignore-file': '.ignore',
@@ -82,7 +82,7 @@ CONFIG_TYPES = {
     'rename-extensions': (dict, None),
     'ignore-extensions': (list, str),
 
-    'output-dir': str,
+    'data-dir': str,
     'archive-dir': str,
     'hash-algorithm': str,
     'ignore-file': str,

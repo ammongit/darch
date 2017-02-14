@@ -35,7 +35,7 @@
         "pickle"
     ],
     
-    "output-dir": ".darch",
+    "data-dir": ".darch",
     "archive-dir": ".",
     "hash-algorithm": "sha1",
     "ignore-file": ".ignore",

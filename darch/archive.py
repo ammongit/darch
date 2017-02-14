@@ -39,12 +39,11 @@ class Archive(object):
         self.work_path = os.path.basename(dir_path)
         self.dir_path = dir_path
         self.tarball_path = os.path.join(self.config['archive-dir'], dir_path + ".7z")
-        self.data_path = os.path.join(self.dir_path, self.config['output-dir'])
 
         self._dir_check()
 
         self.fops = ReadOnlyFileOps() if self.config['dry-run'] else FileOps()
-        self.tree = Tree(self.data_path, self.fops)
+        self.tree = Tree(self.dir_path, self.config, self.fops)
 
     @staticmethod
     def _passwd_flag(confirm=False):
@@ -58,7 +57,6 @@ class Archive(object):
     def _dir_check(self):
         dir_exists = os.path.exists(self.dir_path)
         tar_exists = os.path.exists(self.tarball_path)
-        dat_exists = os.path.exists(self.data_path)
 
         if dir_exists and not os.path.isdir(self.dir_path):
             log_error("Extracted path is not a directory.")

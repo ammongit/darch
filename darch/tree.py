@@ -22,30 +22,39 @@ __all__ = [
     'Tree',
 ]
 
-from .log import log
+from .log import log, log_error
 
 import os
 import pickle
 
 class Tree(object):
-    def __init__(self, directory, fops):
+    def __init__(self, main_dir, config, fops):
         self.files = {}
         self.dirty = {}
         self.fops = fops
-        self.directory = directory
+        self.config = config
+        self.main_dir = main_dir
+        self.data_dir = os.path.join(main_dir, self.config['data-dir'])
+        self.ignore = None
 
+        if not os.path.isdir(self.main_dir):
+            log_error("Archive main directory does not exist: %s" % self.main_dir)
+        if not os.path.isdir(self.data_dir):
+            self.fops.mkdir(self.data_dir)
         self.scan()
+        self.sync()
 
     def scan(self):
-        for dirpath, dirnames, filenames in os.walk(self.directory):
-            print(dirpath, dirnames, filenames)
+        for dirpath, dirnames, filenames in os.walk(self.main_dir):
+            for dirname in dirnames:
+                print("DIR %s" % dirname)
+            for filename in filenames:
+                print("FILE %s" % filename)
 
     def update(self):
         print("TODO tree.update")
 
     def sync(self):
-        if not os.path.isdir(self.directory):
-            self.fops.mkdir(self.directory)
         path = os.path.join(self.directory, "tree.pickle")
         with self.fops.open(path, 'wb') as fh:
             pickle.dump(self.files, fh)
