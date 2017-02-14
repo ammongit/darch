@@ -65,22 +65,31 @@ class Tree(object):
                 st = os.stat(full_path)
                 hashsum = self.hash(full_path)
 
+                # Add files to dirty list
                 entry = (st.st_ctime, st.st_mtime, hashsum)
                 try:
                     ctime, mtime, hashsum2 = self.files[path]
-
                     if hashsum != hashsum:
                         self.dirty[path] = entry
                 except KeyError:
                     self.dirty[path] = entry
 
-                self.hashes[hashsum] = self.hashes.get(hashsum, ()) + (path,)
-        for val in self.hashes.values():
-            for path in val:
-                pass
+                self.hashes[hashsum] = self.hashes.get(hashsum, [])
+                self.hashes[hashsum].append(path)
+
+        # Remove old hashlist files
+        new_hashes = {}
+        for hashsum, paths in self.hashes.items():
+            new_paths = []
+            for path in paths:
+                path = os.path.join(self.main_dir, path)
+                if os.path.exists(path):
+                    new_paths.append(path)
+            self.hashes[hashsum] = new_paths
 
     def update(self):
-        print("TODO tree.update")
+        for path, entry in self.dirty:
+            pass
 
     def sync(self):
         path = os.path.join(self.data_dir, 'tree.pickle')
@@ -89,9 +98,9 @@ class Tree(object):
 
         path = os.path.join(self.data_dir, 'duplicates.txt')
         with self.fops.open(path, 'w') as fh:
-            for key, val in self.hashes.items():
-                if len(val) >= 2:
-                    fh.write("%s: %s\n" % (key, ';'.join(val)))
+            for hashsum, paths in self.hashes.items():
+                if len(paths) >= 2:
+                    fh.write("%s: %s\n" % (hashsum, ';'.join(paths)))
 
     def _read(self):
         path = os.path.join(self.data_dir, 'tree.pickle')
