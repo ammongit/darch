@@ -38,7 +38,8 @@ class Archive(object):
         self.config = default_config if config is None else config
         self.tarball_path = os.path.join(self.config['archive-dir'], dir_path + ".7z")
         self.fops = ReadOnlyFileOps() if self.config['dry-run'] else FileOps()
-        self.tree = Tree(self.dir_path, self.fops)
+        self.data_path = os.path.join(self.dir_path, self.config['output-dir'])
+        self.tree = Tree(self.data_path, self.fops)
         if os.path.exists(dir_path) and not os.path.isdir(dir_path):
             log_error("Extracted path is not a directory.")
 
