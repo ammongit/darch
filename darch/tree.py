@@ -59,10 +59,12 @@ class Tree(object):
 
     def scan(self):
         offset = len(self.main_dir) + 1
+        visited = set()
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
             for filename in filenames:
                 full_path = os.path.join(dirpath, filename)
                 path = full_path[offset:]
+                visited.add(path)
                 st = os.stat(full_path)
                 ctime = int(st.st_ctime)
                 mtime = int(st.st_mtime)
@@ -89,7 +91,7 @@ class Tree(object):
 
         # Find removed files
         for path, entry in self.files.items():
-            if path not in self.dirty:
+            if path not in visited:
                 self.to_remove.append(path)
                 try:
                     self.hashes[entry[2]].remove(path)
