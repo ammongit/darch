@@ -32,6 +32,7 @@ class Tree(object):
     def __init__(self, main_dir, config, fops):
         self.files = {}
         self.dirty = {}
+        self.removed = []
         self.hashes = {}
         self.fops = fops
         self.config = config
@@ -77,19 +78,21 @@ class Tree(object):
                 self.hashes[hashsum] = self.hashes.get(hashsum, [])
                 self.hashes[hashsum].append(path)
 
-        # Remove old hashlist files
-        new_hashes = {}
-        for hashsum, paths in self.hashes.items():
-            new_paths = []
-            for path in paths:
-                path = os.path.join(self.main_dir, path)
-                if os.path.exists(path):
-                    new_paths.append(path)
-            self.hashes[hashsum] = new_paths
+        # Find removed files
+        for path, entry in self.files:
+            if path not in self.dirty:
+                self.removed.append(path)
+                self.hashes[entry[2]].remove(path)
 
     def update(self):
         for path, entry in self.dirty:
-            pass
+            self.paths[path] = entry
+
+        for path in self.removed:
+            del self.paths[path]
+
+        self.dirty = {}
+        self.removed = []
 
     def sync(self):
         path = os.path.join(self.data_dir, 'tree.pickle')

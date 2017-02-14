@@ -106,22 +106,35 @@ class Archive(object):
 
     def update(self):
         log("Updating archive...", True)
-        dirty = self.tree.dirty.keys()
-        if not dirty:
-            log("Nothing to update.", True)
-            return
-
-        arguments = [
-            '7z',
-            'a',
-        ]
         pflag = self._passwd_flag()
-        arguments.append(pflag)
-        arguments.append(self.tarball_path)
-        arguments += self.tree.dirty.keys()
+        dirty = self.tree.dirty.keys()
+        if dirty:
+            arguments = [
+                '7z',
+                'a',
+            ]
+            arguments.append(pflag)
+            arguments.append(self.tarball_path)
+            arguments += self.tree.dirty.keys()
 
-        if self.fops.call(arguments):
-            log_error("Archive update failed.")
+            if self.fops.call(arguments):
+                log_error("Archive update failed.")
+
+        if self.removed:
+            arguments = [
+                '7z',
+                'd',
+            ]
+            arguments.append(pflag)
+            arguments.append(self.tarball_path)
+            arguments += self.removed
+
+            if self.fops.call(arguments):
+                log_error("Archive deletions failed.")
+
+        if not dirty and not self.removed:
+            log("Nothing to update.", True)
+
         self.tree.update()
         self.tree.sync()
         self._test(pflag)

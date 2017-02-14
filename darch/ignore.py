@@ -27,7 +27,11 @@ from fnmatch import fnmatch
 class Ignore(object):
     def __init__(self, fh):
         print("TODO Ignore")
+        self.patterns = []
 
     def check(self, path):
+        for pattern in self.patterns:
+            if fnmatch(path, pattern):
+                return True
         return False
 
