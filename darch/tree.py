@@ -71,12 +71,13 @@ class Tree(object):
                     if st.st_ctime != ctime or st.st_mtime != mtime:
                         hashsum = self.hash(full_path)
                     else:
-                        hashsum = None
+                        hashsum = hashsum2
                 except KeyError:
                     hashsum = self.hash(full_path)
+                    hashsum2 = None
 
                 entry = (st.st_ctime, st.st_mtime, hashsum)
-                if hashsum:
+                if hashsum != hashsum2:
                     self.dirty[path] = entry
                     self.hashes[hashsum] = self.hashes.get(hashsum, [])
                     self.hashes[hashsum].append(path)
