@@ -24,6 +24,7 @@ __all__ = [
 
 from .log import log, log_error
 
+import binascii
 import hashlib
 import os
 import pickle
@@ -54,22 +55,25 @@ class Tree(object):
 
     def hash(self, path):
         with self.fops.open(path, 'rb') as fh:
-            return self._hash(fh.read()).hexdigest()
+            return self._hash(fh.read()).digest()
 
     def scan(self):
-        print(self.files)
-
         offset = len(self.main_dir) + 1
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
             for filename in filenames:
                 full_path = os.path.join(dirpath, filename)
                 path = full_path[offset:]
                 st = os.stat(full_path)
+                ctime = int(st.st_ctime)
+                mtime = int(st.st_mtime)
 
                 # Add files to dirty list
                 try:
-                    ctime, mtime, hashsum2 = self.files[path]
-                    if st.st_ctime != ctime or st.st_mtime != mtime:
+                    ctime2, mtime2, hashsum2 = self.files[path]
+                    ctime2 = int(ctime2)
+                    mtime2 = int(mtime2)
+
+                    if ctime != ctime2 or mtime != mtime2:
                         hashsum = self.hash(full_path)
                     else:
                         hashsum = hashsum2
@@ -77,7 +81,7 @@ class Tree(object):
                     hashsum = self.hash(full_path)
                     hashsum2 = None
 
-                entry = (st.st_ctime, st.st_mtime, hashsum)
+                entry = (ctime, mtime, hashsum)
                 if hashsum != hashsum2:
                     self.dirty[path] = entry
                     self.hashes[hashsum] = self.hashes.get(hashsum, [])
@@ -91,10 +95,6 @@ class Tree(object):
                     self.hashes[entry[2]].remove(path)
                 except KeyError:
                     pass
-
-        print(self.to_remove)
-        print(self.dirty)
-        print(self.hashes)
 
     def update(self):
         for path, entry in self.dirty.items():
@@ -115,7 +115,8 @@ class Tree(object):
         with self.fops.open(path, 'w') as fh:
             for hashsum, paths in self.hashes.items():
                 if len(paths) >= 2:
-                    fh.write("%s: %s\n" % (hashsum, ';'.join(paths)))
+                    hex_hash = binascii.hexlify(hashsum).decode('utf-8')
+                    fh.write("%s: %s\n" % (hex_hash, ';'.join(paths)))
 
     def _read(self, write=False):
         path = os.path.join(self.data_dir, 'tree.pickle')
