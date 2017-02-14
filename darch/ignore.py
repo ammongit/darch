@@ -26,5 +26,8 @@ from fnmatch import fnmatch
 
 class Ignore(object):
     def __init__(self, fh):
-        pass
+        print("TODO Ignore")
+
+    def check(self, path):
+        return False
 

@@ -24,6 +24,7 @@ __all__ = [
 
 from .log import log, log_error
 
+import hashlib
 import os
 import pickle
 
@@ -31,31 +32,73 @@ class Tree(object):
     def __init__(self, main_dir, config, fops):
         self.files = {}
         self.dirty = {}
+        self.hashes = {}
         self.fops = fops
         self.config = config
         self.main_dir = main_dir
         self.data_dir = os.path.join(main_dir, self.config['data-dir'])
         self.ignore = None
 
+        try:
+            self._hash = getattr(hashlib, config['hash-algorithm'])
+        except AttributeError:
+            log_error("No such hash algorithm: %s" % config['hash-algorithm'])
+
         if not os.path.isdir(self.main_dir):
             log_error("Archive main directory does not exist: %s" % self.main_dir)
         if not os.path.isdir(self.data_dir):
             self.fops.mkdir(self.data_dir)
         self.scan()
+        self._read()
         self.sync()
 
+    def hash(self, path):
+        with self.fops.open(path, 'rb') as fh:
+            return self._hash(fh.read()).hexdigest()
+
     def scan(self):
+        offset = len(self.main_dir) + 1
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
-            for dirname in dirnames:
-                print("DIR %s" % dirname)
             for filename in filenames:
-                print("FILE %s" % filename)
+                full_path = os.path.join(dirpath, filename)
+                path = full_path[offset:]
+                st = os.stat(full_path)
+                hashsum = self.hash(full_path)
+
+                entry = (st.st_ctime, st.st_mtime, hashsum)
+                try:
+                    ctime, mtime, hashsum2 = self.files[path]
+
+                    if hashsum != hashsum:
+                        self.dirty[path] = entry
+                except KeyError:
+                    self.dirty[path] = entry
+
+                self.hashes[hashsum] = self.hashes.get(hashsum, ()) + (path,)
+        for val in self.hashes.values():
+            for path in val:
+                pass
 
     def update(self):
         print("TODO tree.update")
 
     def sync(self):
-        path = os.path.join(self.directory, "tree.pickle")
+        path = os.path.join(self.data_dir, 'tree.pickle')
         with self.fops.open(path, 'wb') as fh:
             pickle.dump(self.files, fh)
+
+        path = os.path.join(self.data_dir, 'duplicates.txt')
+        with self.fops.open(path, 'w') as fh:
+            for key, val in self.hashes.items():
+                if len(val) >= 2:
+                    fh.write("%s: %s\n" % (key, ';'.join(val)))
+
+    def _read(self):
+        path = os.path.join(self.data_dir, 'tree.pickle')
+        if not os.path.exists(path):
+            return
+        with self.fops.open(path, 'rb') as fh:
+            obj = pickle.load(fh)
+        if type(obj) != dict:
+            log_error("Unpickled object is not a dict.")
 
