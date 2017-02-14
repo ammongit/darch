@@ -24,7 +24,7 @@ __all__ = [
 
 from .config import default_config
 from .fops import FileOps, ReadOnlyFileOps
-from .log import log_error
+from .log import log, log_error
 from .tree import Tree
 
 from getpass import getpass
@@ -34,23 +34,16 @@ import os
 
 class Archive(object):
     def __init__(self, dir_path, config=None):
-        if config is None:
-            config = default_config()
-
         self.dir_path = dir_path
-        self.tarball_path = os.path.join(config['archive-dir'], dir_path + ".7z")
-        self.config = config
-        self.tree = Tree()
-
-        if config['dry-run']:
-            self.fops = ReadOnlyFileOps()
-        else:
-            self.fops = FileOps()
-
+        self.config = default_config if config is None else config
+        self.tarball_path = os.path.join(self.config['archive-dir'], dir_path + ".7z")
+        self.fops = ReadOnlyFileOps() if self.config['dry-run'] else FileOps()
+        self.tree = Tree(self.dir_path, self.fops)
         if os.path.exists(dir_path) and not os.path.isdir(dir_path):
             log_error("Extracted path is not a directory.")
 
-    def _passwd_flag(self, confirm=False):
+    @staticmethod
+    def _passwd_flag(confirm=False):
         passwd = getpass("Enter your password: ")
         if confirm:
             passwd2 = getpass("Enter it again: ")
@@ -65,17 +58,20 @@ class Archive(object):
         return os.path.exists(self.dir_path)
 
     def backup(self):
+        log("Backing up archive...", True)
         self.fops.move(self.tarball_path, self.tarball_path + "~")
 
     def create(self):
+        log("Creating archive...", True)
         arguments = [
             '7z',
             'a',
             '-t7z',
             '-mx=%d' % self.config['compression'],
         ]
+        pflag = self._passwd_flag(True)
         if self.config['encrypted']:
-            arguments.append(self._passwd_flag(True))
+            arguments.append(pflag)
         arguments.append(self.tarball_path)
         arguments.append(self.dir_path)
 
@@ -85,17 +81,31 @@ class Archive(object):
         if self.config['test-archive']:
             arguments = [
                 '7z',
-                't'
+                't',
                 '-t7z',
             ]
             if self.config['encrypted']:
-                arguments.append(self._passwd_flag())
+                arguments.append(pflag)
             arguments.append(self.tarball_path)
 
             if self.fops.call(arguments):
                 log_error("Archive failed consistency test.")
 
+    def update(self):
+        log("Updating archive...", True)
+        arguments = [
+            '7z',
+            'a',
+            self.tarball_path,
+        ]
+        arguments += self.tree.dirty_files()
+
+        if self.fops(arguments):
+            log_error("Archive update failed.")
+        tree.sync()
+
     def extract(self):
+        log("Extracting archive...", True)
         arguments = [
             '7z',
             'x',
@@ -105,13 +115,11 @@ class Archive(object):
         arguments.append(self.tarball_path)
 
         if self.fops.call(arguments):
-            pass
-
-    def update(self):
-        print("TODO: update")
+            log_error("Archive extraction failed.")
 
     def delete(self):
-        print("TODO: delete")
+        log("Removing old files...", True)
+        self.fops.remove_dir(self.dir_path)
 
     def clear_recent(self):
         log("Clearing recent documents...", True)

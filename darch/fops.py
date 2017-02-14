@@ -44,13 +44,19 @@ class FileOps(object):
     def remove(self, path):
         os.remove(path)
 
+    def remove_dir(self, path):
+        shutil.rmtree(path)
+
+    def mkdir(self, path):
+        os.mkdir(path)
+
     def truncate(self, path, offset=0):
         os.truncate(path, offset)
 
 def _dummy_open(path, mode='r'):
     with open(path, 'r') as fh:
         text = fh.read()
-    return io.StringIO(text)
+    return io.BytesIO(text.encode('utf-8'))
 
 class ReadOnlyFileOps(FileOps):
     def __init__(self):
@@ -65,6 +71,12 @@ class ReadOnlyFileOps(FileOps):
 
     def remove(self, path):
         print("remove: %s" % path)
+
+    def remove_dir(self, path):
+        print("remove_dir: %s" % path)
+
+    def mkdir(self, path):
+        print("mkdir: %s" % path)
 
     def truncate(self, path, offset=0):
         print("truncate: %s [%d]" % (path, offset))

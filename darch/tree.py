@@ -22,7 +22,31 @@ __all__ = [
     'Tree',
 ]
 
+from .log import log
+
+import os
+import pickle
+
 class Tree(object):
-    def __init__(self):
-        pass
+    def __init__(self, directory, fops):
+        self.files = {}
+        self.dirty = {}
+        self.fops = fops
+        self.directory = directory
+        if not os.path.isdir(self.directory):
+            self.fops.mkdir(self.directory)
+
+        self.scan()
+        self.sync()
+
+    def scan(self):
+        print("TODO tree.scan")
+
+    def update(self):
+        print("TODO tree.update")
+
+    def sync(self):
+        path = os.path.join(self.directory, "tree.pickle")
+        with self.fops.open(path, 'w') as fh:
+            pickle.dump(self.files, fh)
 
