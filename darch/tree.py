@@ -85,11 +85,11 @@ class Tree(object):
                 self.hashes[entry[2]].remove(path)
 
     def update(self):
-        for path, entry in self.dirty:
-            self.paths[path] = entry
+        for path, entry in self.dirty.items():
+            self.files[path] = entry
 
         for path in self.removed:
-            del self.paths[path]
+            del self.files[path]
 
         self.dirty = {}
         self.removed = []

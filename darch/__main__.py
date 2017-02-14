@@ -76,13 +76,17 @@ def main():
             exit()
 
         if archv.extracted():
-            log("[Compressing] %s" % name, True)
-            if args.full:
-                args.create()
+            if archv.first():
+                log("[Creating] %s" % name, True)
+                archv.create()
             else:
-                archv.update()
-            if not args.update_only:
-                archv.delete()
+                log("[Compressing] %s" % name, True)
+                if args.full:
+                    archv.create()
+                else:
+                    archv.update()
+                if not args.update_only:
+                    archv.delete()
         else:
             log("[Extracting] %s" % name, True)
             archv.extract()

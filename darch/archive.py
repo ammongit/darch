@@ -54,6 +54,12 @@ class Archive(object):
                 log_error("Passwords do not match.")
         return '-p' + passwd
 
+    @staticmethod
+    def _print_files(text, paths):
+        log("%s files:" % text, True)
+        for path in paths:
+            log("* %s" % path, True)
+
     def _dir_check(self):
         dir_exists = os.path.exists(self.dir_path)
         tar_exists = os.path.exists(self.tarball_path)
@@ -75,12 +81,14 @@ class Archive(object):
                 arguments.append(pflag)
             arguments.append(self.tarball_path)
 
-            if self.fops.call(arguments):
+            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
                 log_error("Archive failed consistency test.")
-
 
     def extracted(self):
         return os.path.exists(self.dir_path)
+
+    def first(self):
+        return not os.path.exists(self.tarball_path)
 
     def backup(self):
         log("Backing up archive...", True)
@@ -88,6 +96,8 @@ class Archive(object):
 
     def create(self):
         log("Creating archive...", True)
+        oldcwd = os.getcwd()
+        os.chdir(self.dir_path)
         arguments = [
             '7z',
             'a',
@@ -95,46 +105,56 @@ class Archive(object):
             '-mx=%d' % self.config['compression'],
         ]
         pflag = self._passwd_flag(True)
+        files = os.listdir('.')
+        self._print_files('Creating', files)
         if self.config['encrypted']:
             arguments.append(pflag)
         arguments.append(self.tarball_path)
-        arguments.append(self.dir_path)
+        arguments += files
 
-        if self.fops.call(arguments):
+        if self.fops.call(arguments, stdout=subprocess.DEVNULL):
             log("Archive creation failed.")
+        os.chdir(oldcwd)
         self._test(pflag)
 
     def update(self):
         log("Updating archive...", True)
+        oldcwd = os.getcwd()
+        os.chdir(self.dir_path)
         pflag = self._passwd_flag()
+
         dirty = self.tree.dirty.keys()
         if dirty:
+            self._print_files('Updating', dirty)
             arguments = [
                 '7z',
                 'a',
             ]
             arguments.append(pflag)
             arguments.append(self.tarball_path)
-            arguments += self.tree.dirty.keys()
+            arguments += dirty
 
-            if self.fops.call(arguments):
+            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
                 log_error("Archive update failed.")
 
-        if self.removed:
+        removed = self.tree.removed
+        if removed:
+            self._print_files('Removing', removed)
             arguments = [
                 '7z',
                 'd',
             ]
             arguments.append(pflag)
             arguments.append(self.tarball_path)
-            arguments += self.removed
+            arguments += removed
 
-            if self.fops.call(arguments):
+            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
                 log_error("Archive deletions failed.")
 
-        if not dirty and not self.removed:
+        if not dirty and not removed:
             log("Nothing to update.", True)
 
+        os.chdir(oldcwd)
         self.tree.update()
         self.tree.sync()
         self._test(pflag)
@@ -149,7 +169,7 @@ class Archive(object):
             arguments.append(self._passwd_flag())
         arguments.append(self.tarball_path)
 
-        if self.fops.call(arguments):
+        if self.fops.call(arguments, stdout=subprocess.DEVNULL):
             log_error("Archive extraction failed.")
 
     def delete(self):
