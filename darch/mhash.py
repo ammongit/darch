@@ -22,7 +22,7 @@ __all__ = [
     'MediaHasher',
 ]
 
-from .log import log, log_next
+from .log import log
 
 import binascii
 import os
@@ -32,7 +32,7 @@ class MediaHasher(object):
         self.tree = tree
         self.fops = fops
         self.config = config
-        self.confirm = True
+        self.do_confirm = True
         self.changes = []
         self.extensions = frozenset(config['extensions'])
 
@@ -58,16 +58,15 @@ class MediaHasher(object):
         return os.path.join(directory, '.'.join((hashsum, ext)))
 
     def confirm(self, message="Ok"):
-        if self.config['always-yes'] and not self.confirm:
+        if self.config['always-yes'] and not self.do_confirm:
             return True
-        log_next()
-        response = input("%s?\n[Y/n/a/q] " % message).lower().strip()
+        response = input("\n%s?\n[Y/n/a/q] " % message).lower().strip()
         if response in ('', 'y', 'yes'):
             return True
         elif response in ('n', 'no'):
             return False
         elif response in ('a', 'always'):
-            self.confirm = False
+            self.do_confirm = False
             return True
         elif response in ('q', 'quit', 'exit'):
             raise KeyboardInterrupt
@@ -82,7 +81,12 @@ class MediaHasher(object):
             new_path = self._rename_file(path, hashsum)
             if new_path is None:
                 continue
+            if path == new_path:
+                continue
+            # Modify file tree
             self.changes.append((path, new_path))
+            self.tree.to_remove.append(path)
+            self.tree.dirty[new_path] = entry
 
     def apply_changes(self):
         log("Applying hash changes...", True)
@@ -90,6 +94,10 @@ class MediaHasher(object):
         os.chdir(self.tree.main_dir)
         for old_path, new_path in self.changes:
             log("%s -> %s" % (old_path, os.path.basename(new_path)))
+            if os.path.exists(new_path):
+                if not self.confirm("Delete '%s'" % new_path):
+                    continue
+                self.fops.remove(new_path)
             self.fops.rename(old_path, new_path)
         self.changes = []
         os.chdir(old_cwd)

@@ -78,19 +78,22 @@ def main():
         name = os.path.basename(archive)
         archv = Archive(archive, config)
 
-        log("[Hashing] %s" % name, True)
-        archv.hash()
         if args.hash_only:
+            log("[Hashing] %s" % name, True)
+            archv.hash()
             archv.clear_recent()
             exit()
 
         if archv.extracted():
+            archv.hash()
             if archv.first():
                 log("[Creating] %s" % name, True)
                 archv.create()
             else:
                 log("[Compressing] %s" % name, True)
                 if args.full:
+                    archv.invalidate()
+                    archv.scan()
                     archv.create()
                 else:
                     archv.update()
@@ -106,6 +109,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        log("\n")
         log_error("Interrupt by user.")
 

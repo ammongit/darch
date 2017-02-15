@@ -59,6 +59,13 @@ class Tree(object):
         with self.fops.open(path, 'rb') as fh:
             return self._hash_func(fh.read()).digest()
 
+    def invalidate(self):
+        self.files = {}
+        self.dirty = {}
+        self.to_remove = []
+        self.metadata_files = []
+        self.hashes = {}
+
     def scan(self):
         offset = len(self.main_dir) + 1
         visited = set()

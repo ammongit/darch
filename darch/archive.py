@@ -84,6 +84,12 @@ class Archive(object):
             if self.fops.call(arguments, stdout=subprocess.DEVNULL):
                 log_error("Archive failed consistency test.")
 
+    def invalidate(self):
+        self.tree.invalidate()
+
+    def scan(self):
+        self.tree.scan()
+
     def extracted(self):
         return os.path.exists(self.dir_path)
 
