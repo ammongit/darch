@@ -61,14 +61,18 @@ DEFAULT_CONFIG = {
         'pickle',
     ],
 
-    'data-dir': '.darch',
     'archive-dir': '.',
     'hash-algorithm': 'sha1',
     'ignore-file': '.ignore',
 
-    'write-hash-log': 'hashed.log',
+    'data-dir': '.darch',
+    'tree-file': 'tree.pickle',
+    'duplicates-log': 'duplicates.txt',
+    'hash-log': 'hashed.log',
     'ask-confirmation': True,
     'use-trash': False,
+
+    'always-yes': False,
     'dry-run': False,
 }
 
@@ -82,14 +86,18 @@ CONFIG_TYPES = {
     'rename-extensions': (dict, None),
     'ignore-extensions': (list, str),
 
-    'data-dir': str,
     'archive-dir': str,
     'hash-algorithm': str,
     'ignore-file': str,
 
-    'write-hash-log': str,
+    'data-dir': str,
+    'tree-file': str,
+    'duplicates-log': str,
+    'hash-log': str,
     'ask-confirmation': bool,
     'use-trash': bool,
+
+    'always-yes': bool,
     'dry-run': bool,
 }
 
@@ -104,6 +112,9 @@ def load_config(fn):
     with open(fn, 'r') as fh:
         config  = json.load(fh)
     sanity_check(config)
+    for key, val in DEFAULT_CONFIG.items():
+        if key not in config:
+            config[key] = val
     return config
 
 def sanity_check(config):

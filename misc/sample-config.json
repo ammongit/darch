@@ -35,14 +35,18 @@
         "pickle"
     ],
     
-    "data-dir": ".darch",
     "archive-dir": ".",
     "hash-algorithm": "sha1",
     "ignore-file": ".ignore",
 
-    "write-hash-log": "hashed.log",
+    "data-dir": ".darch",
+    "tree-file": "tree.pickle",
+    "duplicates-log": "duplicates.txt",
+    "hash-log": "hashed.log",
     "ask-confirmation": true,
     "use-trash": false,
+
+    "always-yes": false,
     "dry-run": false
 }
 
