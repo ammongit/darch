@@ -7,7 +7,11 @@ A tool that creates media archives that saves on compression time by only updati
 ### Requirements
 This program is written for Python 3.4 or later.
 
-Optionally requires send2trash. If the module is available this program can trash duplicate files instead of deleting them.
+Requires:
+* [pathspec](https://pypi.python.org/pypi/pathspec): for gitignore style globbing
+
+Optional requirements:
+* [send2trash](https://pypi.python.org/pypi/Send2Trash): for trashing files instead of deleting them (see config)
 
 ### Usage
 To create, extract or update an archive, use:

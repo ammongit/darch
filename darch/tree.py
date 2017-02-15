@@ -25,6 +25,7 @@ __all__ = [
 from .ignore import Ignore
 from .log import log, log_error
 from .mhash import MediaHasher
+from .util import elide
 
 import binascii
 import hashlib
@@ -75,6 +76,7 @@ class Tree(object):
         visited = set()
         self.metadata_files = []
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
+            log("Scanning %s..." % elide(dirpath, end=''))
             if os.path.basename(dirpath) == self.config['data-dir']:
                 self.metadata_files += map(lambda x: os.path.join(dirpath, x), filenames)
                 continue

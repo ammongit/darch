@@ -23,6 +23,7 @@ __all__ = [
 ]
 
 from .log import log
+from .util import elide
 
 import binascii
 import os
@@ -94,8 +95,8 @@ class MediaHasher(object):
         os.chdir(self.tree.main_dir)
         to_log = []
         for old_path, new_path in self.changes:
-            log("'%s' -> '%s'" % (old_path, os.path.basename(new_path)), True)
-            to_log.append("%s:%s" % (old_path, new_path))
+            log("'%s' -> '%s'" % (old_path, elide(os.path.basename(new_path))), True)
+            to_log.append("%s::%s" % (old_path, new_path))
             if os.path.exists(new_path):
                 if not self.confirm("Delete '%s'" % new_path):
                     continue

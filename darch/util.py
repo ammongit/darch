@@ -1,5 +1,5 @@
 #
-# ignore.py
+# util.py
 #
 # darch - Difference Archiver
 # Copyright (c) 2015-2017 Ammon Smith
@@ -19,27 +19,16 @@
 #
 
 __all__ = [
-    'Ignore',
+    'elide',
+    'plural',
 ]
 
+def elide(path, width=85, end='...'):
+    if len(path) > width:
+        return path[:width] + end
+    else:
+        return path
 
-from fnmatch import fnmatch
-import pathspec
-import re
-import os
-
-class Ignore(object):
-    def __init__(self):
-        self.specs = []
-
-    def add(self, path_dir, lines):
-        spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, lines)
-        self.specs.append(spec)
-
-    # Returns True if the file should be ignored
-    def check(self, path):
-        for spec in self.specs:
-            if spec.match_file(path):
-                return True
-        return False
+def plural(amount):
+    return '' if amount == 1 else 's'
 
