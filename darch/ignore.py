@@ -27,7 +27,6 @@ import os
 
 class Ignore(object):
     def __init__(self):
-        print("TODO Ignore")
         self.antipatterns = []
         self.patterns = []
 
@@ -44,12 +43,13 @@ class Ignore(object):
                         l = self.patterns
                     l.append(os.path.join(path_dir, line))
 
-    def is_ok(self, path):
+    # Returns True if the file should be ignored
+    def check(self, path):
         for pattern in self.antipatterns:
             if fnmatch(path, pattern):
-                return True
+                return False
         for pattern in self.patterns:
             if fnmatch(path, pattern):
-                return False
-        return True
+                return True
+        return False
 

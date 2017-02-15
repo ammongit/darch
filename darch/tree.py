@@ -22,6 +22,7 @@ __all__ = [
     'Tree',
 ]
 
+from .ignore import Ignore
 from .log import log, log_error
 from .mhash import MediaHasher
 
@@ -41,7 +42,7 @@ class Tree(object):
         self.config = config
         self.main_dir = main_dir
         self.data_dir = os.path.join(main_dir, self.config['data-dir'])
-        self.ignore = None
+        self.ignore = Ignore()
 
         try:
             self._hash_func = getattr(hashlib, config['hash-algorithm'])
@@ -82,6 +83,9 @@ class Tree(object):
                 ctime = int(st.st_ctime)
                 mtime = int(st.st_mtime)
 
+                if filename == self.config['ignore-file']:
+                    self.ignore.add(full_path)
+
                 # Add files to dirty list
                 try:
                     ctime2, mtime2, hashsum2 = self.files[path]
@@ -109,7 +113,7 @@ class Tree(object):
                 try:
                     hashsum = entry[2]
                     self.hashes[hashsum].remove(path)
-                except KeyError:
+                except (KeyError, ValueError):
                     pass
 
     def media_hash(self):
