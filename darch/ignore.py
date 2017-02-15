@@ -34,11 +34,13 @@ class Ignore(object):
 
     def add(self, path_dir, lines):
         spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, lines)
-        self.specs.append(spec)
+        self.specs.append((spec, path_dir))
 
     # Returns True if the file should be ignored
-    def check(self, path):
-        for spec in self.specs:
+    def matches(self, path):
+        for spec, path_dir in self.specs:
+            if not path.startswith(path_dir):
+                continue
             if spec.match_file(path):
                 return True
         return False

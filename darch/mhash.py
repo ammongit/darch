@@ -78,8 +78,9 @@ class MediaHasher(object):
         log("Building hash changes...")
         for path, entry in self.tree.files.items():
             ctime, mtime, hashsum = entry
-            if self.tree.ignore.check(path):
+            if self.tree.ignore.matches(path):
                 log("Ignoring %s..." % path, True)
+                continue
             new_path = self._rename_file(path, hashsum)
             if new_path is None or path == new_path:
                 continue
