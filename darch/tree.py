@@ -44,7 +44,7 @@ class Tree(object):
         self.ignore = None
 
         try:
-            self._hash = getattr(hashlib, config['hash-algorithm'])
+            self._hash_func = getattr(hashlib, config['hash-algorithm'])
         except AttributeError:
             log_error("No such hash algorithm: %s" % config['hash-algorithm'])
 
@@ -55,9 +55,9 @@ class Tree(object):
         self._read(True)
         self.scan()
 
-    def hash(self, path):
+    def _hash(self, path):
         with self.fops.open(path, 'rb') as fh:
-            return self._hash(fh.read()).digest()
+            return self._hash_func(fh.read()).digest()
 
     def scan(self):
         offset = len(self.main_dir) + 1
@@ -82,11 +82,11 @@ class Tree(object):
                     mtime2 = int(mtime2)
 
                     if ctime != ctime2 or mtime != mtime2:
-                        hashsum = self.hash(full_path)
+                        hashsum = self._hash(full_path)
                     else:
                         hashsum = hashsum2
                 except KeyError:
-                    hashsum = self.hash(full_path)
+                    hashsum = self._hash(full_path)
                     hashsum2 = None
 
                 entry = (ctime, mtime, hashsum)

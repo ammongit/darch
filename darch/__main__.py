@@ -77,9 +77,10 @@ def main():
     for archive in archives:
         name = os.path.basename(archive)
         archv = Archive(archive, config)
+
+        log("[Hashing] %s" % name, True)
+        archv.hash()
         if args.hash_only:
-            log("[Hashing] %s" % name, True)
-            archv.hash()
             archv.clear_recent()
             exit()
 

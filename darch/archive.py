@@ -195,7 +195,7 @@ class Archive(object):
         self.fops.remove_dir(self.dir_path)
 
     def hash(self):
-        pass
+        self.tree.media_hash()
 
     def clear_recent(self):
         log("Clearing recent documents...", True)

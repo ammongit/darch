@@ -24,13 +24,17 @@ __all__ = [
 
 from .log import log, log_next
 
+import binascii
+import os
+
 class MediaHasher(object):
     def __init__(self, tree, fops, config):
         self.tree = tree
         self.fops = fops
         self.config = config
         self.confirm = True
-        self.changes = {}
+        self.changes = []
+        self.extensions = frozenset(config['extensions'])
 
     def _rename_file(self, filename, hashsum):
         parts = filename.split('.')
@@ -39,13 +43,19 @@ class MediaHasher(object):
             return None
 
         # Rename specified extensions
+        base = '.'.join(parts[:-1])
         ext = parts[-1].lower()
         try:
             ext = self.config['rename-extensions'][ext]
         except KeyError:
             pass
 
-        pass
+        if ext not in self.extensions:
+            return None
+
+        directory = os.path.dirname(base)
+        hashsum = binascii.hexlify(hashsum).decode('utf-8')
+        return os.path.join(directory, '.'.join((hashsum, ext)))
 
     def confirm(self, message="Ok"):
         if self.config['always-yes'] and not self.confirm:
@@ -68,15 +78,22 @@ class MediaHasher(object):
         log("Building hash changes...", True)
         for path, entry in self.tree.files.items():
             ctime, mtime, hashsum = entry
+            log("Considering %s" % path)
             new_path = self._rename_file(path, hashsum)
             if new_path is None:
                 continue
+            self.changes.append((path, new_path))
 
     def apply_changes(self):
         log("Applying hash changes...", True)
-        self.changes = {}
+        old_cwd = os.getcwd()
+        os.chdir(self.tree.main_dir)
+        for old_path, new_path in self.changes:
+            log("%s -> %s" % (old_path, os.path.basename(new_path)))
+            self.fops.rename(old_path, new_path)
+        self.changes = []
+        os.chdir(old_cwd)
 
     def undo(self):
-        print("TODO")
-        pass
+        raise NotImplementedError
 

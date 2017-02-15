@@ -41,6 +41,7 @@ class FileOps(object):
     def __init__(self, use_trash=False):
         self.open = open
         self.use_trash = use_trash
+        self.rename = self.move
 
     def call(self, arguments, *args, **kwargs):
         return subprocess.call(arguments, *args, **kwargs)
