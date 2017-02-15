@@ -25,7 +25,11 @@ __all__ = [
 ]
 
 DEFAULT_CONFIG = {
-    'compression': 5,
+    'compression': {
+        'level': 5,
+        'format': '7z',
+        'extension': '7z',
+    },
     'encrypted': True,
     'test-archive': False,
     'clear-recent': True,
@@ -77,7 +81,11 @@ DEFAULT_CONFIG = {
 }
 
 CONFIG_TYPES = {
-    'compression': int,
+    'compression': (dict, {
+        'level': int,
+        'format': str,
+        'extension': str,
+    }),
     'encrypted': bool,
     'test-archive': bool,
     'clear-recent': bool,
@@ -117,11 +125,27 @@ def load_config(fn):
             config[key] = val
     return config
 
-def sanity_check(config):
-    def die(name, obj, join='for'):
-        log_error("invalid type %s '%s': %s" %
-                (join, name, type(obj)), True)
+def _die(name, obj, join='for'):
+    log_error("invalid type %s '%s': %s" %
+            (join, name, obj), True)
 
+def _check_dict(real, expected, name):
+    for key in expected.keys():
+        if key not in real:
+            log_error("option '%s' in '%s' not defined" % (key, name))
+
+    for key, val in real.items():
+        if key not in expected.keys():
+            log_warn("option '%s' in '%s' ignored" % (key, name))
+        if type(val) != expected[key]:
+            _die(key, expected[key], 'in')
+
+def _check_list(real, expected):
+    for it in real:
+        if type(it) != expected:
+            _die(it, expected, 'in')
+
+def sanity_check(config):
     for key in config.keys():
         try:
             true_type = CONFIG_TYPES[key]
@@ -132,14 +156,15 @@ def sanity_check(config):
         item = config[key]
         if type(true_type) is tuple:
             if type(item) != true_type[0]:
-                die(key, item)
+                _die(key, type(item))
             if true_type[1]:
-                for val in item:
-                    if type(val) != true_type[1]:
-                        die(val, item, 'in')
+                if true_type[0] == dict:
+                    _check_dict(item, true_type[1], key)
+                else:
+                    _check_list(item, true_type[1])
         else:
             if type(item) != true_type:
-                die(key, item)
+                _die(key, type(item))
     for key in CONFIG_TYPES.keys():
         if key not in config:
             log_error("key '%s' not in config" % key)

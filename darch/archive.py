@@ -37,7 +37,8 @@ class Archive(object):
         self.config = default_config if config is None else config
         self.work_path = os.path.basename(dir_path)
         self.dir_path = dir_path
-        self.tarball_path = os.path.join(self.config['archive-dir'], dir_path + ".7z")
+        tarball_name = '.'.join((dir_path, self.config['compression']['extension']))
+        self.tarball_path = os.path.join(self.config['archive-dir'], tarball_name)
 
         self._dir_check()
         self.fops = get_fops(self.config)
@@ -75,6 +76,7 @@ class Archive(object):
             arguments = [
                 '7z',
                 't',
+                '-t%s' % self.config['compression']['format'],
             ]
             if self.config['encrypted']:
                 arguments.append(pflag)
@@ -106,7 +108,8 @@ class Archive(object):
         arguments = [
             '7z',
             'a',
-            '-mx=%d' % self.config['compression'],
+            '-t%s' % self.config['compression']['format'],
+            '-mx=%d' % self.config['compression']['level'],
         ]
         files = os.listdir('.')
         self._print_files('create', files)
@@ -142,6 +145,7 @@ class Archive(object):
             arguments = [
                 '7z',
                 'a',
+                '-t%s' % self.config['compression']['format'],
             ]
             arguments.append(pflag)
             arguments.append(self.tarball_path)
@@ -154,6 +158,7 @@ class Archive(object):
             arguments = [
                 '7z',
                 'a',
+                '-t%s' % self.config['compression']['format'],
             ]
             arguments.append(pflag)
             arguments.append(self.tarball_path)
@@ -166,6 +171,7 @@ class Archive(object):
             arguments = [
                 '7z',
                 'd',
+                '-t%s' % self.config['compression']['format'],
             ]
             arguments.append(pflag)
             arguments.append(self.tarball_path)
@@ -187,6 +193,7 @@ class Archive(object):
         arguments = [
             '7z',
             'x',
+            '-t%s' % self.config['compression']['format'],
         ]
         if self.config['encrypted']:
             arguments.append(self._passwd_flag())

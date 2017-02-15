@@ -1,5 +1,9 @@
 {
-    "compression": 5,
+    "compression": {
+        "level": 5,
+        "format": "7z",
+        "extension": "7z"
+    },
     "encrypted": true,
     "test-archive": false,
     "clear-recent": true,
