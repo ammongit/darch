@@ -77,12 +77,10 @@ class MediaHasher(object):
         log("Building hash changes...", True)
         for path, entry in self.tree.files.items():
             ctime, mtime, hashsum = entry
-            log("Considering %s" % path)
             new_path = self._rename_file(path, hashsum)
-            if new_path is None:
+            if new_path is None or path == new_path:
                 continue
-            if path == new_path:
-                continue
+
             # Modify file tree
             self.changes.append((path, new_path))
             self.tree.to_remove.append(path)
@@ -92,14 +90,20 @@ class MediaHasher(object):
         log("Applying hash changes...", True)
         old_cwd = os.getcwd()
         os.chdir(self.tree.main_dir)
+        to_log = []
         for old_path, new_path in self.changes:
             log("%s -> %s" % (old_path, os.path.basename(new_path)))
+            to_log.append("%s:%s" % (old_path, new_path))
             if os.path.exists(new_path):
                 if not self.confirm("Delete '%s'" % new_path):
                     continue
                 self.fops.remove(new_path)
             self.fops.rename(old_path, new_path)
         self.changes = []
+        hashed_file = os.path.join(self.tree.data_dir, self.config['hash-log'])
+        with self.fops.open(hashed_file, 'a') as fh:
+            fh.write('~\n')
+            fh.write('\n'.join(to_log))
         os.chdir(old_cwd)
 
     def undo(self):
