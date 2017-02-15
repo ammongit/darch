@@ -20,6 +20,7 @@
 
 __all__ = [
     'Ignore',
+    'match',
 ]
 
 from fnmatch import fnmatch
@@ -33,22 +34,27 @@ class Ignore(object):
     def add(self, path_dir, lines):
         for line in lines:
             line = line.strip()
-            if not line.startswith('#'):
+            if line and not line.startswith('#'):
                 if line.startswith('!'):
                     line = line[1:]
                     l = self.antipatterns
                 else:
                     l = self.patterns
                 l.append(os.path.join(path_dir, line))
-        print(self.patterns)
 
     # Returns True if the file should be ignored
     def check(self, path):
         for pattern in self.antipatterns:
-            if fnmatch(path, pattern):
+            if match(path, pattern):
                 return False
         for pattern in self.patterns:
-            if fnmatch(path, pattern):
+            if match(path, pattern):
                 return True
         return False
+
+def match(path, pattern):
+    if pattern.endswith(os.sep):
+        return path.startswith(pattern)
+    else:
+        return fnmatch(path, pattern)
 

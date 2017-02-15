@@ -27,7 +27,7 @@ __all__ = [
 
 import sys
 
-if sys.stdin.isatty():
+if sys.stdout.isatty():
     RED_COLOR    = '\033[31m'
     YELLOW_COLOR = '\033[33m'
     RESET_COLOR  = '\033[0m'

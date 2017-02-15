@@ -32,7 +32,7 @@ class MediaHasher(object):
         self.tree = tree
         self.fops = fops
         self.config = config
-        self.do_confirm = True
+        self.confirm_rest = False
         self.changes = []
         self.extensions = frozenset(config['extensions'])
 
@@ -58,15 +58,15 @@ class MediaHasher(object):
         return os.path.join(directory, '.'.join((hashsum, ext)))
 
     def confirm(self, message="Ok"):
-        if self.config['always-yes'] and not self.do_confirm:
+        if self.config['always-yes'] or self.confirm_rest:
             return True
-        response = input("\n%s?\n[Y/n/a/q] " % message).lower().strip()
+        response = input(">> %s?\n[Y/n/a/q] " % message).lower().strip()
         if response in ('', 'y', 'yes'):
             return True
         elif response in ('n', 'no'):
             return False
         elif response in ('a', 'always'):
-            self.do_confirm = False
+            self.confirm_rest = True
             return True
         elif response in ('q', 'quit', 'exit'):
             raise KeyboardInterrupt
@@ -74,12 +74,11 @@ class MediaHasher(object):
             return False
 
     def build_changes(self):
-        log("Building hash changes...", True)
+        log("Building hash changes...")
         for path, entry in self.tree.files.items():
-            log("Considering %s..." % path)
             ctime, mtime, hashsum = entry
             if self.tree.ignore.check(path):
-                continue
+                log("Ignoring %s..." % path, True)
             new_path = self._rename_file(path, hashsum)
             if new_path is None or path == new_path:
                 continue
@@ -90,7 +89,7 @@ class MediaHasher(object):
             self.tree.dirty[new_path] = entry
 
     def apply_changes(self):
-        log("Applying hash changes...", True)
+        log("Applying hash changes...")
         old_cwd = os.getcwd()
         os.chdir(self.tree.main_dir)
         to_log = []
