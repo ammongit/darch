@@ -21,7 +21,16 @@
 __all__ = [
     'FileOps',
     'ReadOnlyFileOps',
+    'get_fops',
 ]
+
+from .log import log_error
+
+try:
+    from send2trash import send2trash
+except ImportError:
+    def send2trash(path):
+        log_error("'send2trash' module not found.")
 
 import io
 import os
@@ -29,8 +38,9 @@ import shutil
 import subprocess
 
 class FileOps(object):
-    def __init__(self):
+    def __init__(self, use_trash=False):
         self.open = open
+        self.use_trash = use_trash
 
     def call(self, arguments, *args, **kwargs):
         return subprocess.call(arguments, *args, **kwargs)
@@ -42,7 +52,10 @@ class FileOps(object):
         os.rename(old_path, new_path)
 
     def remove(self, path):
-        os.remove(path)
+        if self.use_trash:
+            send2trash(path)
+        else:
+            os.remove(path)
 
     def remove_dir(self, path):
         shutil.rmtree(path)
@@ -80,4 +93,10 @@ class ReadOnlyFileOps(FileOps):
 
     def truncate(self, path, offset=0):
         print("truncate: %s [%d]" % (path, offset))
+
+def get_fops(config):
+    if config['dry-run']:
+        obj = ReadOnlyFileOps(config['use-trash'])
+    else:
+        obj = FileOps()
 

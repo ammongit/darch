@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 from .config import default_config
-from .fops import FileOps, ReadOnlyFileOps
+from .fops import get_fops
 from .log import log, log_error
 from .tree import Tree
 
@@ -41,7 +41,7 @@ class Archive(object):
 
         self._dir_check()
 
-        self.fops = ReadOnlyFileOps() if self.config['dry-run'] else FileOps()
+        self.fops = get_fops(self.config)
         self.tree = Tree(self.dir_path, self.config, self.fops)
 
     @staticmethod

@@ -22,7 +22,7 @@ __all__ = [
     'MediaHasher',
 ]
 
-from .log import log
+from .log import log, log_next
 from .tree import Tree
 
 class MediaHasher(object):
@@ -31,13 +31,27 @@ class MediaHasher(object):
         self.fops = fops
         self.config = config
         self.confirm = True
+        self.changes = {}
 
-    def _transform_ext(self, filename):
+    def _rename_file(self, filename, hashsum):
+        parts = filename.split('.')
+        # No '.' in filename
+        if len(parts) == 1:
+            return None
+
+        # Rename specified extensions
+        ext = parts[-1].lower()
+        try:
+            ext = self.config['rename-extensions'][ext]
+        except KeyError:
+            pass
+
         pass
 
     def confirm(self, message="Ok"):
         if self.config['always-yes'] and not self.confirm:
             return True
+        log_next()
         response = input("%s?\n[Y/n/a/q] " % message).lower().strip()
         if response in ('', 'y', 'yes'):
             return True
@@ -50,6 +64,18 @@ class MediaHasher(object):
             raise KeyboardInterrupt
         else:
             return False
+
+    def build_changes(self):
+        log("Building hash changes...", True)
+        for path, entry in self.tree.files.items():
+            ctime, mtime, hashsum = entry
+            new_path = self._rename_file(path, hashsum)
+            if new_path is None:
+                continue
+
+    def apply_changes(self):
+        log("Applying hash changes...". True)
+        self.changes = {}
 
     def undo(self):
         print("TODO")

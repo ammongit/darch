@@ -101,9 +101,9 @@ class Tree(object):
                     pass
 
     def media_hash(self):
-        self.
         mhash = MediaHasher(self, self.fops, self.config)
-        print("TODO")
+        mhash.build_changes()
+        mhash.apply_changes()
 
     def update(self):
         for path, entry in self.dirty.items():
