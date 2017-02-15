@@ -25,6 +25,7 @@ HELP_CONFIG    = "Specify the configuration file."
 HELP_DRYRUN    = "Don't actually do anything, just print the results."
 HELP_UPDATE    = "Update the archive only, leaving the files extracted."
 HELP_HASHONLY  = "Only run the media hash. Do not affect the archive. Ignores any -u options set."
+HELP_TEST      = "Test the archive after modifying it."
 HELP_FULL      = "Recreate the full archive. Doesn't use the difference algorithm."
 HELP_YES       = "Automatically answer 'yes' to every question prompt."
 HELP_ARGUMENTS = "The archives you wish to operate on."
@@ -50,6 +51,7 @@ def main():
     parser.add_argument('-n', '--dry-run', action='store_true', default=None, help=HELP_DRYRUN)
     parser.add_argument('-u', '--update-only', action='store_true', help=HELP_UPDATE)
     parser.add_argument('-m', '--hash-only', action='store_true', help=HELP_HASHONLY)
+    parser.add_argument('-t', '--test', action='store_true', default=None, help=HELP_TEST)
     parser.add_argument('-F', '--full', action='store_true', help=HELP_FULL)
     parser.add_argument('-y', '--always-yes', action='store_true', default=None, help=HELP_YES)
     parser.add_argument('archive-dir', nargs='+', help=HELP_ARGUMENTS)
@@ -67,9 +69,10 @@ def main():
 
     if args.dry_run is not None:
         config['dry-run'] = args.dry_run
-
     if args.always_yes is not None:
         config['always-yes'] = args.always_yes
+    if args.test is not None:
+        config['test-archive'] = args.test
 
     for archive in archives:
         name = os.path.basename(archive)

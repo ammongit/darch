@@ -35,6 +35,7 @@ class Tree(object):
         self.files = {}
         self.dirty = {}
         self.to_remove = []
+        self.metadata_files = []
         self.hashes = {}
         self.fops = fops
         self.config = config
@@ -61,7 +62,11 @@ class Tree(object):
     def scan(self):
         offset = len(self.main_dir) + 1
         visited = set()
+        self.metadata_files = []
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
+            if os.path.basename(dirpath) == self.config['data-dir']:
+                self.metadata_files += map(lambda x: os.path.join(dirpath, x), filenames)
+                continue
             for filename in filenames:
                 full_path = os.path.join(dirpath, filename)
                 path = full_path[offset:]

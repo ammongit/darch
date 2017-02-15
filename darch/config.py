@@ -27,7 +27,7 @@ __all__ = [
 DEFAULT_CONFIG = {
     'compression': 5,
     'encrypted': True,
-    'test-archive': True,
+    'test-archive': False,
     'clear-recent': True,
 
     'extensions': [
@@ -62,7 +62,7 @@ DEFAULT_CONFIG = {
     ],
 
     'archive-dir': '.',
-    'hash-algorithm': 'sha1',
+    'hash-algorithm': 'sha224',
     'ignore-file': '.ignore',
 
     'data-dir': '.darch',

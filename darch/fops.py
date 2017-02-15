@@ -96,7 +96,7 @@ class ReadOnlyFileOps(FileOps):
 
 def get_fops(config):
     if config['dry-run']:
-        obj = ReadOnlyFileOps(config['use-trash'])
+        return ReadOnlyFileOps(config['use-trash'])
     else:
-        obj = FileOps()
+        return FileOps()
 

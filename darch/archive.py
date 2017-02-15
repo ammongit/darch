@@ -55,7 +55,9 @@ class Archive(object):
 
     @staticmethod
     def _print_files(text, paths):
-        log("%s files:" % text, True)
+        if not paths:
+            return
+        log("Files to %s:" % text, True)
         for path in paths:
             log("* %s" % path, True)
 
@@ -74,7 +76,6 @@ class Archive(object):
             arguments = [
                 '7z',
                 't',
-                '-t7z',
             ]
             if self.config['encrypted']:
                 arguments.append(pflag)
@@ -100,12 +101,11 @@ class Archive(object):
         arguments = [
             '7z',
             'a',
-            '-t7z',
             '-mx=%d' % self.config['compression'],
         ]
-        pflag = self._passwd_flag(True)
         files = os.listdir('.')
-        self._print_files('Creating', files)
+        self._print_files('create', files)
+        pflag = self._passwd_flag(True)
         if self.config['encrypted']:
             arguments.append(pflag)
         arguments.append(self.tarball_path)
@@ -122,11 +122,30 @@ class Archive(object):
         log("Updating archive...", True)
         oldcwd = os.getcwd()
         os.chdir(self.dir_path)
-        pflag = self._passwd_flag()
 
         dirty = self.tree.dirty.keys()
+        self._print_files('update', dirty)
+        removed = self.tree.to_remove
+        self._print_files('remove', removed)
+        metadata = self.tree.metadata_files
+        if not dirty and not removed:
+            log("Nothing to do.", True)
+            return
+        pflag = self._passwd_flag()
+
+        if metadata:
+            arguments = [
+                '7z',
+                'a',
+            ]
+            arguments.append(pflag)
+            arguments.append(self.tarball_path)
+            arguments += self.tree.metadata_files
+
+            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+                log_error("Archive metadata update failed.")
+
         if dirty:
-            self._print_files('Updating', dirty)
             arguments = [
                 '7z',
                 'a',
@@ -138,9 +157,7 @@ class Archive(object):
             if self.fops.call(arguments, stdout=subprocess.DEVNULL):
                 log_error("Archive updates failed.")
 
-        removed = self.tree.to_remove
         if removed:
-            self._print_files('Removing', removed)
             arguments = [
                 '7z',
                 'd',

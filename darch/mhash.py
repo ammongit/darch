@@ -23,7 +23,6 @@ __all__ = [
 ]
 
 from .log import log, log_next
-from .tree import Tree
 
 class MediaHasher(object):
     def __init__(self, tree, fops, config):
@@ -74,7 +73,7 @@ class MediaHasher(object):
                 continue
 
     def apply_changes(self):
-        log("Applying hash changes...". True)
+        log("Applying hash changes...", True)
         self.changes = {}
 
     def undo(self):

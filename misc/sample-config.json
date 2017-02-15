@@ -1,7 +1,7 @@
 {
     "compression": 5,
     "encrypted": true,
-    "test_archive": true,
+    "test-archive": false,
     "clear-recent": true,
 
     "extensions": [
@@ -27,7 +27,8 @@
     ],
 
     "rename-extensions": {
-        "jpeg": "jpg"
+        "jpg": "jpeg",
+        "tif": "tiff"
     },
 
     "ignore-extensions": [
@@ -36,7 +37,7 @@
     ],
     
     "archive-dir": ".",
-    "hash-algorithm": "sha1",
+    "hash-algorithm": "sha224",
     "ignore-file": ".ignore",
 
     "data-dir": ".darch",
