@@ -143,11 +143,9 @@ class Tree(object):
                     hex_hash = binascii.hexlify(hashsum).decode('utf-8')
                     fh.write("%s: %s\n" % (hex_hash, ';'.join(paths)))
 
-    def _read(self, write=False):
+    def _read(self):
         path = os.path.join(self.data_dir, self.config['tree-file'])
         if not os.path.exists(path):
-            if write:
-                self.sync()
             return
         with self.fops.open(path, 'rb') as fh:
             obj = pickle.load(fh)

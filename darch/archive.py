@@ -40,7 +40,6 @@ class Archive(object):
         self.tarball_path = os.path.join(self.config['archive-dir'], dir_path + ".7z")
 
         self._dir_check()
-
         self.fops = get_fops(self.config)
         self.tree = Tree(self.dir_path, self.config, self.fops)
 

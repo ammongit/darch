@@ -30,18 +30,17 @@ class Ignore(object):
         self.antipatterns = []
         self.patterns = []
 
-    def add(self, path, _open=open):
-        path_dir = os.path.dirname(path)
-        with _open(path, 'r') as fh:
-            for line in fh.readlines():
-                line = line.strip()
-                if not line.startswith('#'):
-                    if line.startswith('!'):
-                        line = line[1:]
-                        l = self.antipatterns
-                    else:
-                        l = self.patterns
-                    l.append(os.path.join(path_dir, line))
+    def add(self, path_dir, lines):
+        for line in lines:
+            line = line.strip()
+            if not line.startswith('#'):
+                if line.startswith('!'):
+                    line = line[1:]
+                    l = self.antipatterns
+                else:
+                    l = self.patterns
+                l.append(os.path.join(path_dir, line))
+        print(self.patterns)
 
     # Returns True if the file should be ignored
     def check(self, path):
