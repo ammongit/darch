@@ -22,6 +22,7 @@ __all__ = [
     'log',
     'log_error',
     'log_warn',
+    'log_next',
 ]
 
 import sys
@@ -64,4 +65,7 @@ class Logger(object):
 log = Logger()
 log_error = log.print_error
 log_warn = log.print_warn
+
+def log_next():
+    log('', True)
 

@@ -23,6 +23,7 @@ __all__ = [
 ]
 
 from .log import log, log_error
+from .mhash import MediaHasher
 
 import binascii
 import hashlib
@@ -94,9 +95,15 @@ class Tree(object):
             if path not in visited:
                 self.to_remove.append(path)
                 try:
-                    self.hashes[entry[2]].remove(path)
+                    hashsum = entry[2]
+                    self.hashes[hashsum].remove(path)
                 except KeyError:
                     pass
+
+    def media_hash(self):
+        self.
+        mhash = MediaHasher(self, self.fops, self.config)
+        print("TODO")
 
     def update(self):
         for path, entry in self.dirty.items():
@@ -109,11 +116,11 @@ class Tree(object):
         self.to_remove = []
 
     def sync(self):
-        path = os.path.join(self.data_dir, 'tree.pickle')
+        path = os.path.join(self.data_dir, self.config['tree-file'])
         with self.fops.open(path, 'wb') as fh:
             pickle.dump(self.files, fh)
 
-        path = os.path.join(self.data_dir, 'duplicates.txt')
+        path = os.path.join(self.data_dir, self.config['duplicates-log'])
         with self.fops.open(path, 'w') as fh:
             for hashsum, paths in self.hashes.items():
                 if len(paths) >= 2:
@@ -121,7 +128,7 @@ class Tree(object):
                     fh.write("%s: %s\n" % (hex_hash, ';'.join(paths)))
 
     def _read(self, write=False):
-        path = os.path.join(self.data_dir, 'tree.pickle')
+        path = os.path.join(self.data_dir, self.config['tree-file'])
         if not os.path.exists(path):
             if write:
                 self.sync()

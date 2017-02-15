@@ -19,11 +19,39 @@
 #
 
 __all__ = [
-    'media_hash',
+    'MediaHasher',
 ]
 
+from .log import log
 from .tree import Tree
 
-def media_hash(tree):
-    print("TODO media_hash")
+class MediaHasher(object):
+    def __init__(self, tree, fops, config):
+        self.tree = tree
+        self.fops = fops
+        self.config = config
+        self.confirm = True
+
+    def _transform_ext(self, filename):
+        pass
+
+    def confirm(self, message="Ok"):
+        if self.config['always-yes'] and not self.confirm:
+            return True
+        response = input("%s?\n[Y/n/a/q] " % message).lower().strip()
+        if response in ('', 'y', 'yes'):
+            return True
+        elif response in ('n', 'no'):
+            return False
+        elif response in ('a', 'always'):
+            self.confirm = False
+            return True
+        elif response in ('q', 'quit', 'exit'):
+            raise KeyboardInterrupt
+        else:
+            return False
+
+    def undo(self):
+        print("TODO")
+        pass
 

@@ -177,6 +177,9 @@ class Archive(object):
         log("Removing old files...", True)
         self.fops.remove_dir(self.dir_path)
 
+    def hash(self):
+        pass
+
     def clear_recent(self):
         log("Clearing recent documents...", True)
         path = os.path.expanduser('~/.local/share/recently-used.xbel')
