@@ -76,6 +76,7 @@ class MediaHasher(object):
     def build_changes(self):
         log("Building hash changes...", True)
         for path, entry in self.tree.files.items():
+            log("Considering %s..." % path)
             ctime, mtime, hashsum = entry
             if self.tree.ignore.check(path):
                 continue
@@ -94,12 +95,12 @@ class MediaHasher(object):
         os.chdir(self.tree.main_dir)
         to_log = []
         for old_path, new_path in self.changes:
-            log("'%s' -> '%s'" % (old_path, os.path.basename(new_path)))
+            log("'%s' -> '%s'" % (old_path, os.path.basename(new_path)), True)
             to_log.append("%s:%s" % (old_path, new_path))
             if os.path.exists(new_path):
                 if not self.confirm("Delete '%s'" % new_path):
                     continue
-                log("Removed '%s'." % new_path)
+                log("Removed '%s'." % new_path, True)
                 self.fops.remove(new_path)
             self.fops.rename(old_path, new_path)
         self.changes = []

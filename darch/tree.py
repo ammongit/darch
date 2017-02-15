@@ -53,8 +53,11 @@ class Tree(object):
             log_error("Archive main directory does not exist: %s" % self.main_dir)
         if not os.path.isdir(self.data_dir):
             self.fops.mkdir(self.data_dir)
-        self._read(True)
+
+        not self._read()
         self.scan()
+        self.update()
+        self.sync()
 
     def _hash(self, path):
         with self.fops.open(path, 'rb') as fh:
@@ -84,7 +87,8 @@ class Tree(object):
                 mtime = int(st.st_mtime)
 
                 if filename == self.config['ignore-file']:
-                    self.ignore.add(full_path)
+                    with self.fops.open(full_path, 'r') as fh:
+                        self.ignore.add(dirpath[offset:], fh.readlines())
 
                 # Add files to dirty list
                 try:
