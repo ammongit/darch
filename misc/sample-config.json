@@ -4,6 +4,7 @@
         "format": "7z",
         "extension": "7z"
     },
+    "backup": true,
     "encrypted": true,
     "test-archive": false,
     "clear-recent": true,
