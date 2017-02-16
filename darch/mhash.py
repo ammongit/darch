@@ -79,7 +79,7 @@ class MediaHasher(object):
         for path, entry in self.tree.files.items():
             ctime, mtime, hashsum = entry
             if self.tree.ignore.matches(path):
-                log("Ignoring %s..." % path, True)
+                log("Ignoring %s..." % path)
                 continue
             new_path = self._rename_file(path, hashsum)
             if new_path is None or path == new_path:
@@ -105,7 +105,7 @@ class MediaHasher(object):
                 self.fops.remove(new_path)
             self.fops.rename(old_path, new_path)
         self.changes = []
-        hashed_file = os.path.join(self.tree.data_dir, self.config['hash-log'])
+        hashed_file = os.path.join(self.config['data-dir'], self.config['hash-log'])
         with self.fops.open(hashed_file, 'a') as fh:
             fh.write('~\n')
             fh.write('\n'.join(to_log))

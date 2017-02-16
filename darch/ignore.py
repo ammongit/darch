@@ -40,7 +40,6 @@ class Ignore(object):
     def matches(self, path):
         for spec, path_dir in self.specs:
             if path.startswith(path_dir):
-                print(path[len(path_dir) + 1:])
                 offset = len(path_dir) + 1
                 path = path[offset:]
                 if spec.match_file(path):

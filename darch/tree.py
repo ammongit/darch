@@ -51,21 +51,29 @@ class Tree(object):
             log_error("No such hash algorithm: %s" % config['hash-algorithm'])
 
         if not os.path.isdir(self.main_dir):
+            self.no_dir = True
             self.scan()
             return
 
-        if not os.path.isdir(self.data_dir):
-            self.fops.mkdir(self.data_dir)
+        self.no_dir = False
         self._read()
         self.scan()
         self.update()
         self.sync()
+
+    def _check_data_dir(self):
+        if not self.no_dir:
+            return
+        if os.path.isdir(self.main_dir) and not os.path.isdir(self.data_dir):
+            self.fops.mkdir(self.data_dir)
+            self.no_dir = False
 
     def _hash(self, path):
         with self.fops.open(path, 'rb') as fh:
             return self._hash_func(fh.read()).digest()
 
     def purge_logs(self):
+        self._check_data_dir()
         logs = ('duplicates-log', 'hash-log')
         files = map(lambda x: os.path.join(self.data_dir, self.config[x]), logs)
         for fn in files:
@@ -130,6 +138,7 @@ class Tree(object):
                     pass
 
     def media_hash(self):
+        self._check_data_dir()
         mhash = MediaHasher(self, self.fops, self.config)
         mhash.build_changes()
         mhash.apply_changes()
@@ -145,6 +154,7 @@ class Tree(object):
         self.to_remove = []
 
     def sync(self):
+        self._check_data_dir()
         path = os.path.join(self.data_dir, self.config['tree-file'])
         with self.fops.open(path, 'wb') as fh:
             pickle.dump(self.files, fh)
@@ -157,6 +167,7 @@ class Tree(object):
                     fh.write("%s: %s\n" % (hex_hash, ';'.join(paths)))
 
     def _read(self):
+        self._check_data_dir()
         path = os.path.join(self.data_dir, self.config['tree-file'])
         if not os.path.exists(path):
             return
