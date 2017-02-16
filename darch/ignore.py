@@ -39,9 +39,11 @@ class Ignore(object):
     # Returns True if the file should be ignored
     def matches(self, path):
         for spec, path_dir in self.specs:
-            if not path.startswith(path_dir):
-                continue
-            if spec.match_file(path):
-                return True
+            if path.startswith(path_dir):
+                print(path[len(path_dir) + 1:])
+                offset = len(path_dir) + 1
+                path = path[offset:]
+                if spec.match_file(path):
+                    return True
         return False
 

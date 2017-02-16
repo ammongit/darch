@@ -19,7 +19,7 @@
 #
 
 __all__ = [
-    'Archive'
+    'Archive',
 ]
 
 from .archive import Archive
