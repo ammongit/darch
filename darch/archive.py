@@ -100,9 +100,17 @@ class Archive(object):
     def first(self):
         return not os.path.exists(self.tarball_path)
 
-    def backup(self):
+    def backup(self, move=False):
         log("Backing up archive...", True)
-        self.fops.move(self.tarball_path, self.tarball_path + "~")
+        source = self.tarball_path
+        dest = self.tarball_path + '~'
+        if move:
+            self.fops.move(source, dest)
+        else:
+            self.fops.copy(source, dest)
+
+    def test(self):
+        self._test(self._passwd_flag())
 
     def create(self):
         log("Creating archive...", True)

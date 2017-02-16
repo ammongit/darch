@@ -28,6 +28,7 @@ HELP_UPDATE    = "Update the archive only, leaving the files extracted."
 HELP_HASHONLY  = "Only run the media hash. Do not affect the archive. Ignores any -u options set."
 HELP_TEST      = "Test the archive after modifying it."
 HELP_FULL      = "Recreate the full archive. Doesn't use the difference algorithm."
+HELP_NOBACKUP  = "Don't create a copy of the archive before updating it."
 HELP_YES       = "Automatically answer 'yes' to every question prompt."
 HELP_PURGELOGS = "Clean out the log files created by the archiver before running."
 HELP_ARGUMENTS = "The archives you wish to operate on."
@@ -56,6 +57,7 @@ def main():
     parser.add_argument('-m', '--hash-only', action='store_true', help=HELP_HASHONLY)
     parser.add_argument('-t', '--test', action='store_true', default=None, help=HELP_TEST)
     parser.add_argument('-F', '--full', action='store_true', help=HELP_FULL)
+    parser.add_argument('-B', '--no-backup', action='store_true', help=HELP_NOBACKUP)
     parser.add_argument('-y', '--always-yes', action='store_true', default=None, help=HELP_YES)
     parser.add_argument('-P', '--purge-logs', action='store_true', help=HELP_PURGELOGS)
     parser.add_argument('archive-dir', nargs='+', help=HELP_ARGUMENTS)
@@ -99,6 +101,8 @@ def main():
                 archv.create()
             else:
                 log("[Compressing] %s" % name, True)
+                if not args.no_backup:
+                    archv.backup()
                 if args.full:
                     archv.invalidate()
                     archv.scan()
