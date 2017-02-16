@@ -85,6 +85,9 @@ class Archive(object):
             if self.fops.call(arguments, stdout=subprocess.DEVNULL):
                 log_error("Archive failed consistency test.")
 
+    def purge(self):
+        self.tree.purge_logs()
+
     def invalidate(self):
         self.tree.invalidate()
 

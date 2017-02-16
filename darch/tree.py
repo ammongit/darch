@@ -64,6 +64,12 @@ class Tree(object):
         with self.fops.open(path, 'rb') as fh:
             return self._hash_func(fh.read()).digest()
 
+    def purge_logs(self):
+        logs = ('duplicates-log', 'hash-log')
+        files = map(lambda x: os.path.join(self.data_dir, self.config[x]), logs)
+        for fn in files:
+            self.fops.truncate(fn)
+
     def invalidate(self):
         self.files = {}
         self.dirty = {}

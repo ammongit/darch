@@ -28,6 +28,7 @@ HELP_HASHONLY  = "Only run the media hash. Do not affect the archive. Ignores an
 HELP_TEST      = "Test the archive after modifying it."
 HELP_FULL      = "Recreate the full archive. Doesn't use the difference algorithm."
 HELP_YES       = "Automatically answer 'yes' to every question prompt."
+HELP_PURGELOGS = "Clean out the log files created by the archiver before running."
 HELP_ARGUMENTS = "The archives you wish to operate on."
 
 from .archive import Archive
@@ -54,6 +55,7 @@ def main():
     parser.add_argument('-t', '--test', action='store_true', default=None, help=HELP_TEST)
     parser.add_argument('-F', '--full', action='store_true', help=HELP_FULL)
     parser.add_argument('-y', '--always-yes', action='store_true', default=None, help=HELP_YES)
+    parser.add_argument('-P', '--purge-logs', action='store_true', help=HELP_PURGELOGS)
     parser.add_argument('archive-dir', nargs='+', help=HELP_ARGUMENTS)
     args = parser.parse_args()
 
@@ -77,6 +79,9 @@ def main():
     for archive in archives:
         name = os.path.basename(archive)
         archv = Archive(archive, config)
+
+        if args.purge_logs:
+            archv.purge()
 
         if args.hash_only:
             log("[Hashing] %s" % name, True)
