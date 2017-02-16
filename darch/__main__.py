@@ -22,6 +22,7 @@ __all__ = []
 
 DESCRIPTION    = "Manage a hashed media archive."
 HELP_CONFIG    = "Specify the configuration file."
+HELP_DIRECTORY = "Look for archives in this directory. Does nothing if the archive isn't a relative path."
 HELP_DRYRUN    = "Don't actually do anything, just print the results."
 HELP_UPDATE    = "Update the archive only, leaving the files extracted."
 HELP_HASHONLY  = "Only run the media hash. Do not affect the archive. Ignores any -u options set."
@@ -49,6 +50,7 @@ def config_path():
 def main():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('-c', '--config', help=HELP_CONFIG)
+    parser.add_argument('-d', '--directory', default='', help=HELP_DIRECTORY)
     parser.add_argument('-n', '--dry-run', action='store_true', default=None, help=HELP_DRYRUN)
     parser.add_argument('-u', '--update-only', action='store_true', help=HELP_UPDATE)
     parser.add_argument('-m', '--hash-only', action='store_true', help=HELP_HASHONLY)
@@ -78,6 +80,7 @@ def main():
 
     for archive in archives:
         name = os.path.basename(archive)
+        archive = os.path.join(args.directory, archive)
         archv = Archive(archive, config)
 
         if args.purge_logs:
