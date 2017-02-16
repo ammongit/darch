@@ -2,12 +2,13 @@
 Difference Archiver
 
 ### Synopsis
-A tool that creates media archives that saves on compression time by only updating altered files. It hashes filenames by renaming them to their equivalent hash sum to remove duplicates, and loads/stores the result in a 7z archive.
+A tool that creates media archives that saves on compression time by only updating altered files. It hashes filenames by renaming them to their equivalent hash sum to remove duplicates, and loads/stores the result in a compressed archive.
 
 ### Requirements
 This program is written for Python 3.4 or later.
 
 Requires:
+* [p7zip](http://p7zip.sourceforge.net/) command-line tool: for manipulating archives
 * [pathspec](https://pypi.python.org/pypi/pathspec): for gitignore style globbing
 
 Optional requirements:
@@ -20,14 +21,10 @@ python -m darch [flags] archive-name...
 ```
 
 There are a number of options available. Here are a couple that may be of interest:
-```
-| Flag | Description                                       |
-|------|---------------------------------------------------|
-| `-u` | Update the archive only, leaving files on disk.   |
-| `-m` | Perform media hash only, no archive manipulation. |
-| `-n` | Dry run. No changes are made on the filesystem.   |
-| `-F` | Full run. Recreate the archive from scratch.      |
-```
+* `-u`: Update the archive only, leaving files on disk.
+* `-m`: Perform media hash only, no archive manipulation.
+* `-n`: Dry run. No changes are made on the filesystem.
+* `-F`: Full run. Recreate the archive from scratch.
 
 ### Configuration
 Each archive can have its own configuration file by placing an appropriately-formatted `darch.json` in the root directory.
@@ -40,6 +37,9 @@ By creating a file called `.ignore` in a directory, you can specify which files 
 
 #### Undoing renaming
 If you accidentally run the media hasher on the wrong directory, the filename information of many files can be lost, which may be a big headache to reverse. So by default, all changed files are logged in `.darch/hashed.log` so you could renamed them back if necessary.
+
+#### Duplicates
+Duplicates across multiple directories are listed in `.darch/duplicates.log` after a succesful run.
 
 ### License
 This program is licensed under the GPL version 2 or later. See `LICENSE` for more details.
