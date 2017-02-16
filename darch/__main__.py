@@ -57,7 +57,7 @@ def main():
     parser.add_argument('-m', '--hash-only', action='store_true', help=HELP_HASHONLY)
     parser.add_argument('-t', '--test', action='store_true', default=None, help=HELP_TEST)
     parser.add_argument('-F', '--full', action='store_true', help=HELP_FULL)
-    parser.add_argument('-b', '--backup', action='store_true', default=None, help=HELP_BACKUP)
+    parser.add_argument('-b', '--no-backup', action='store_false', default=None, help=HELP_BACKUP)
     parser.add_argument('-y', '--always-yes', action='store_true', default=None, help=HELP_YES)
     parser.add_argument('-P', '--purge-logs', action='store_true', help=HELP_PURGELOGS)
     parser.add_argument('archive-dir', nargs='+', help=HELP_ARGUMENTS)
@@ -79,8 +79,8 @@ def main():
         config['always-yes'] = args.always_yes
     if args.test is not None:
         config['test-archive'] = args.test
-    if args.backup is not None:
-        config['backup'] = args.backup
+    if args.no_backup is not None:
+        config['backup'] = args.no_backup
 
     for archive in archives:
         name = os.path.basename(archive)
