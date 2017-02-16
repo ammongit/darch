@@ -50,16 +50,10 @@ class Tree(object):
         except AttributeError:
             log_error("No such hash algorithm: %s" % config['hash-algorithm'])
 
-        if not os.path.isdir(self.main_dir):
-            self.no_dir = True
-            self.scan()
-            return
-
-        self.no_dir = False
-        self._read()
+        self.no_dir = not os.path.isdir(self.main_dir)
+        if self.no_dir:
+            self._read()
         self.scan()
-        self.update()
-        self.sync()
 
     def _check_data_dir(self):
         if not self.no_dir:
@@ -93,7 +87,8 @@ class Tree(object):
         for dirpath, dirnames, filenames in os.walk(self.main_dir):
             log("Scanning %s..." % elide(dirpath, end=''))
             if os.path.basename(dirpath) == self.config['data-dir']:
-                self.metadata_files += map(lambda x: os.path.join(dirpath, x), filenames)
+                y = lambda x: os.path.join(self.config['data-dir'], x)
+                self.metadata_files += map(y, filenames)
                 continue
             for filename in filenames:
                 full_path = os.path.join(dirpath, filename)
@@ -110,9 +105,6 @@ class Tree(object):
                 # Add files to dirty list
                 try:
                     ctime2, mtime2, hashsum2 = self.files[path]
-                    ctime2 = int(ctime2)
-                    mtime2 = int(mtime2)
-
                     if ctime != ctime2 or mtime != mtime2:
                         hashsum = self._hash(full_path)
                     else:
@@ -124,8 +116,9 @@ class Tree(object):
                 entry = (ctime, mtime, hashsum)
                 if hashsum != hashsum2:
                     self.dirty[path] = entry
-                    self.hashes[hashsum] = self.hashes.get(hashsum, [])
-                    self.hashes[hashsum].append(path)
+                    l = self.hashes.get(hashsum, [])
+                    l.append(path)
+                    self.hashes[hashsum] = l
 
         # Find removed files
         for path, entry in self.files.items():
@@ -146,10 +139,8 @@ class Tree(object):
     def update(self):
         for path, entry in self.dirty.items():
             self.files[path] = entry
-
         for path in self.to_remove:
             del self.files[path]
-
         self.dirty = {}
         self.to_remove = []
 

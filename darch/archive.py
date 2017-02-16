@@ -54,12 +54,12 @@ class Archive(object):
         return '-p' + passwd
 
     @staticmethod
-    def _print_files(text, paths):
+    def _print_files(text, paths, bullet='*'):
         if not paths:
             return
         log("Files to %s:" % text, True)
         for path in paths:
-            log("* %s" % path, True)
+            log("%s %s" % (bullet, path), True)
 
     def _dir_check(self):
         dir_exists = os.path.exists(self.dir_path)
@@ -123,7 +123,7 @@ class Archive(object):
             '-mx=%d' % self.config['compression']['level'],
         ]
         files = os.listdir('.')
-        self._print_files('create', files)
+        self._print_files('create', files, '+')
         pflag = self._passwd_flag(True)
         if self.config['encrypted']:
             arguments.append(pflag)
@@ -143,9 +143,9 @@ class Archive(object):
         os.chdir(self.dir_path)
 
         dirty = self.tree.dirty.keys()
-        self._print_files('update', dirty)
+        self._print_files('update', dirty, '+')
         removed = self.tree.to_remove
-        self._print_files('remove', removed)
+        self._print_files('remove', removed, '-')
         metadata = self.tree.metadata_files
         if not dirty and not removed:
             log("Nothing to do.", True)
