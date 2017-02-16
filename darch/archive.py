@@ -82,7 +82,7 @@ class Archive(object):
                 arguments.append(pflag)
             arguments.append(self.tarball_path)
 
-            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+            if self.fops.call(arguments):
                 log_error("Archive failed consistency test.")
 
     def purge(self):
@@ -130,7 +130,7 @@ class Archive(object):
         arguments.append(self.tarball_path)
         arguments += files
 
-        if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+        if self.fops.call(arguments):
             log("Archive creation failed.")
         os.chdir(oldcwd)
         self.tree.update()
@@ -162,7 +162,7 @@ class Archive(object):
             arguments.append(self.tarball_path)
             arguments += self.tree.metadata_files
 
-            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+            if self.fops.call(arguments):
                 log_error("Archive metadata update failed.")
 
         if dirty:
@@ -175,7 +175,7 @@ class Archive(object):
             arguments.append(self.tarball_path)
             arguments += dirty
 
-            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+            if self.fops.call(arguments):
                 log_error("Archive updates failed.")
 
         if removed:
@@ -188,7 +188,7 @@ class Archive(object):
             arguments.append(self.tarball_path)
             arguments += removed
 
-            if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+            if self.fops.call(arguments):
                 log_error("Archive deletions failed.")
 
         if not dirty and not removed:
@@ -210,7 +210,7 @@ class Archive(object):
             arguments.append(self._passwd_flag())
         arguments.append(self.tarball_path)
 
-        if self.fops.call(arguments, stdout=subprocess.DEVNULL):
+        if self.fops.call(arguments):
             log_error("Archive extraction failed.")
 
     def delete(self):

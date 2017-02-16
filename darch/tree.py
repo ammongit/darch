@@ -51,11 +51,12 @@ class Tree(object):
             log_error("No such hash algorithm: %s" % config['hash-algorithm'])
 
         if not os.path.isdir(self.main_dir):
-            log_error("Archive main directory does not exist: %s" % self.main_dir)
+            self.scan()
+            return
+
         if not os.path.isdir(self.data_dir):
             self.fops.mkdir(self.data_dir)
-
-        not self._read()
+        self._read()
         self.scan()
         self.update()
         self.sync()
