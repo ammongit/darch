@@ -92,7 +92,7 @@ class MediaHasher(object):
 
     def apply_changes(self):
         log("Applying hash changes...")
-        old_cwd = os.getcwd()
+        oldcwd = os.getcwd()
         os.chdir(self.tree.main_dir)
         to_log = []
         for old_path, new_path in self.changes:
@@ -109,7 +109,7 @@ class MediaHasher(object):
         with self.fops.open(hashed_file, 'a') as fh:
             fh.write('~\n')
             fh.write('\n'.join(to_log))
-        os.chdir(old_cwd)
+        os.chdir(oldcwd)
 
     def undo(self):
         raise NotImplementedError

@@ -50,13 +50,13 @@ class Tree(object):
         except AttributeError:
             log_error("No such hash algorithm: %s" % config['hash-algorithm'])
 
-        self.no_dir = not os.path.isdir(self.main_dir)
-        if self.no_dir:
+        self.has_dir = os.path.isdir(self.main_dir)
+        if self.has_dir:
             self._read()
         self.scan()
 
     def _check_data_dir(self):
-        if not self.no_dir:
+        if self.has_dir:
             return
         if os.path.isdir(self.main_dir) and not os.path.isdir(self.data_dir):
             self.fops.mkdir(self.data_dir)
@@ -106,10 +106,12 @@ class Tree(object):
                 try:
                     ctime2, mtime2, hashsum2 = self.files[path]
                     if ctime != ctime2 or mtime != mtime2:
+                        # Might be modified, recheck hash
                         hashsum = self._hash(full_path)
                     else:
                         hashsum = hashsum2
                 except KeyError:
+                    # New file
                     hashsum = self._hash(full_path)
                     hashsum2 = None
 

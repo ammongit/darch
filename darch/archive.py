@@ -39,6 +39,7 @@ class Archive(object):
         self.dir_path = dir_path
         tarball_name = '.'.join((dir_path, self.config['compression']['extension']))
         self.tarball_path = os.path.join(self.config['archive-dir'], tarball_name)
+        self.tarball_path = os.path.abspath(self.tarball_path)
 
         self._dir_check()
         self.fops = get_fops(self.config)
@@ -48,7 +49,7 @@ class Archive(object):
     def _passwd_flag(confirm=False):
         passwd = getpass("Enter your password: ")
         if confirm:
-            passwd2 = getpass("Enter it again: ")
+            passwd2 = getpass("Verify your password: ")
             if passwd != passwd2:
                 log_error("Passwords do not match.")
         return '-p' + passwd
@@ -114,33 +115,29 @@ class Archive(object):
 
     def create(self):
         log("Creating archive...", True)
-        oldcwd = os.getcwd()
-        os.chdir(self.dir_path)
         arguments = [
             '7z',
             'a',
             '-t%s' % self.config['compression']['format'],
             '-mx=%d' % self.config['compression']['level'],
         ]
-        files = os.listdir('.')
+        files = os.listdir(self.tree.main_dir)
         self._print_files('create', files, '+')
         pflag = self._passwd_flag(True)
         if self.config['encrypted']:
             arguments.append(pflag)
         arguments.append(self.tarball_path)
         arguments += files
+        print(arguments)
 
         if self.fops.call(arguments):
             log("Archive creation failed.")
-        os.chdir(oldcwd)
         self.tree.update()
         self.tree.sync()
         self._test(pflag)
 
     def update(self):
         log("Updating archive...", True)
-        oldcwd = os.getcwd()
-        os.chdir(self.dir_path)
 
         dirty = self.tree.dirty.keys()
         self._print_files('update', dirty, '+')
@@ -160,7 +157,8 @@ class Archive(object):
             ]
             arguments.append(pflag)
             arguments.append(self.tarball_path)
-            arguments += self.tree.metadata_files
+            arguments += metadata
+            print(arguments)
 
             if self.fops.call(arguments):
                 log_error("Archive metadata update failed.")
@@ -174,6 +172,7 @@ class Archive(object):
             arguments.append(pflag)
             arguments.append(self.tarball_path)
             arguments += dirty
+            print(arguments)
 
             if self.fops.call(arguments):
                 log_error("Archive updates failed.")
@@ -187,6 +186,7 @@ class Archive(object):
             arguments.append(pflag)
             arguments.append(self.tarball_path)
             arguments += removed
+            print(arguments)
 
             if self.fops.call(arguments):
                 log_error("Archive deletions failed.")
@@ -194,7 +194,6 @@ class Archive(object):
         if not dirty and not removed:
             log("Nothing to update.", True)
 
-        os.chdir(oldcwd)
         self.tree.update()
         self.tree.sync()
         self._test(pflag)
