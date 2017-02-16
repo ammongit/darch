@@ -76,6 +76,7 @@ class MediaHasher(object):
 
     def build_changes(self):
         log("Building hash changes...")
+        # TODO add changes from self.tree.dirty
         for path, entry in self.tree.files.items():
             ctime, mtime, hashsum = entry
             if self.tree.ignore.matches(path):

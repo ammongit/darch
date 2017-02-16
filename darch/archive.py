@@ -115,13 +115,15 @@ class Archive(object):
 
     def create(self):
         log("Creating archive...", True)
+        oldcwd = os.getcwd()
+        os.chdir(self.tree.main_dir)
         arguments = [
             '7z',
             'a',
             '-t%s' % self.config['compression']['format'],
             '-mx=%d' % self.config['compression']['level'],
         ]
-        files = os.listdir(self.tree.main_dir)
+        files = os.listdir('.')
         self._print_files('create', files, '+')
         pflag = self._passwd_flag(True)
         if self.config['encrypted']:
@@ -132,12 +134,15 @@ class Archive(object):
 
         if self.fops.call(arguments):
             log("Archive creation failed.")
+        os.chdir(oldcwd)
         self.tree.update()
         self.tree.sync()
         self._test(pflag)
 
     def update(self):
         log("Updating archive...", True)
+        oldcwd = os.getcwd()
+        os.chdir(self.tree.main_dir)
 
         dirty = self.tree.dirty.keys()
         self._print_files('update', dirty, '+')
@@ -148,20 +153,6 @@ class Archive(object):
             log("Nothing to do.", True)
             return
         pflag = self._passwd_flag()
-
-        if metadata:
-            arguments = [
-                '7z',
-                'a',
-                '-t%s' % self.config['compression']['format'],
-            ]
-            arguments.append(pflag)
-            arguments.append(self.tarball_path)
-            arguments += metadata
-            print(arguments)
-
-            if self.fops.call(arguments):
-                log_error("Archive metadata update failed.")
 
         if dirty:
             arguments = [
@@ -191,9 +182,24 @@ class Archive(object):
             if self.fops.call(arguments):
                 log_error("Archive deletions failed.")
 
+        if metadata:
+            arguments = [
+                '7z',
+                'a',
+                '-t%s' % self.config['compression']['format'],
+            ]
+            arguments.append(pflag)
+            arguments.append(self.tarball_path)
+            arguments += metadata
+            print(arguments)
+
+            if self.fops.call(arguments):
+                log_error("Archive metadata update failed.")
+
         if not dirty and not removed:
             log("Nothing to update.", True)
 
+        os.chdir(oldcwd)
         self.tree.update()
         self.tree.sync()
         self._test(pflag)
