@@ -206,6 +206,9 @@ class Archive(object):
 
     def extract(self):
         log("Extracting archive...", True)
+        oldcwd = os.getcwd()
+        os.chdir(self.main_dir)
+        self.fops.mkdir(self.main_dir)
         arguments = [
             '7z',
             'x',
@@ -217,6 +220,7 @@ class Archive(object):
 
         if self.fops.call(arguments):
             log_error("Archive extraction failed.")
+        os.chdir(oldcwd)
 
     def delete(self):
         log("Removing old files...", True)
