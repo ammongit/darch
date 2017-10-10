@@ -22,13 +22,12 @@ __all__ = [
     'Ignore',
 ]
 
-
 from fnmatch import fnmatch
 import pathspec
 import re
 import os
 
-class Ignore(object):
+class Ignore:
     def __init__(self):
         self.specs = []
 

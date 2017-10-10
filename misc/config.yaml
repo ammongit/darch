@@ -1,0 +1,61 @@
+---
+
+compression:
+  level: 5
+  format: 7z
+  extension: 7z
+
+backup: true
+encrypted: true
+test-archive: false
+clear-recent: false
+
+extensions:
+  - aac
+  - bmp
+  - gif
+  - jpeg
+  - jpe
+  - jpg
+  - m4a
+  - mkv
+  - mpeg
+  - mp3
+  - mp4
+  - ogg
+  - opus
+  - png
+  - svg
+  - tif
+  - tiff
+  - webm
+  - webp
+  - wmv
+
+rename-extensions:
+  jpe: jpeg
+  jpg: jpeg
+  tif: tiff
+
+skip-extensions:
+  - yaml
+  - pickle
+
+ignore-files:
+  - .ignore
+  - _ignore
+
+archive-dir: .
+hash-algorithm: sha224
+
+data-dir: .darch
+tree-file: tree.pickle
+
+logging:
+  duplicates: duplicates.log
+  hashing: hashed.log
+
+use-trash: false
+ask-confirmation: true
+always-yes: false
+dry-run: false

@@ -1,5 +1,5 @@
 #
-# fops.py
+# fsops.py
 #
 # darch - Difference Archiver
 # Copyright (c) 2015-2017 Ammon Smith
@@ -19,8 +19,8 @@
 #
 
 __all__ = [
-    'FileOps',
-    'ReadOnlyFileOps',
+    'FsOps',
+    'ReadOnlyFsOps',
     'get_fops',
 ]
 
@@ -37,7 +37,7 @@ import os
 import shutil
 import subprocess
 
-class FileOps(object):
+class FsOps:
     def __init__(self, use_trash=False):
         self.open = open
         self.use_trash = use_trash
@@ -83,9 +83,9 @@ def _dummy_open(path, mode='r'):
             text = ''
         return io.StringIO(text)
 
-class ReadOnlyFileOps(FileOps):
+class ReadOnlyFsOps(FsOps):
     def __init__(self):
-        FileOps.__init__(self)
+        super().__init__(self)
         self.open = _dummy_open
 
     def call(self, arguments, *args, **kwargs):
@@ -109,9 +109,9 @@ class ReadOnlyFileOps(FileOps):
     def truncate(self, path, offset=0):
         print("<TRUNCATE> %s [%d]" % (path, offset))
 
-def get_fops(config):
+def get_interface(config):
     if config['dry-run']:
-        return ReadOnlyFileOps()
+        return ReadOnlyFsOps()
     else:
-        return FileOps(config['use-trash'])
+        return FsOps(config['use-trash'])
 

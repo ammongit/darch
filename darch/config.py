@@ -19,155 +19,109 @@
 #
 
 __all__ = [
-    'default_config',
-    'load_config',
-    'sanity_check',
+    'Config',
 ]
 
-DEFAULT_CONFIG = {
-    'compression': {
-        'level': 5,
-        'format': '7z',
-        'extension': '7z',
-    },
-    'backup': True,
-    'encrypted': True,
-    'test-archive': False,
-    'clear-recent': True,
+import hashlib
 
-    'extensions': [
-        'aac',
-        'bmp',
-        'gif',
-        'jpeg',
-        'jpg',
-        'm4a',
-        'mkv',
-        'mpeg',
-        'mp3',
-        'mp4',
-        'ogg',
-        'opus',
-        'png',
-        'svg',
-        'tif',
-        'tiff',
-        'webm',
-        'webp',
-        'wmv',
-    ],
-
-    'rename-extensions': {
-        'jpeg': 'jpg',
-    },
-
-    'ignore-extensions': [
-        'json',
-        'pickle',
-    ],
-
-    'archive-dir': '.',
-    'hash-algorithm': 'sha224',
-    'ignore-file': '.ignore',
-
-    'data-dir': '.darch',
-    'tree-file': 'tree.pickle',
-    'duplicates-log': 'duplicates.txt',
-    'hash-log': 'hashed.log',
-    'ask-confirmation': True,
-    'use-trash': False,
-
-    'always-yes': False,
-    'dry-run': False,
-}
-
-CONFIG_TYPES = {
-    'compression': (dict, {
-        'level': int,
-        'format': str,
-        'extension': str,
-    }),
-    'backup': bool,
-    'encrypted': bool,
-    'test-archive': bool,
-    'clear-recent': bool,
-
-    'extensions': (list, str),
-    'rename-extensions': (dict, None),
-    'ignore-extensions': (list, str),
-
-    'archive-dir': str,
-    'hash-algorithm': str,
-    'ignore-file': str,
-
-    'data-dir': str,
-    'tree-file': str,
-    'duplicates-log': str,
-    'hash-log': str,
-    'ask-confirmation': bool,
-    'use-trash': bool,
-
-    'always-yes': bool,
-    'dry-run': bool,
-}
+import yaml
 
 from .log import log, log_error, log_warn
 
-import json
+def _check(obj, name, ftype):
+    try:
+        field = getattr(obj, name)
+    except AttributeError:
+        log_error("No such field in config file: {}".format(name))
+        exit(1)
 
-def default_config():
-    return DEFAULT_CONFIG.copy()
+    if not isinstance(field, ftype):
+        log_error("The field '{}' is of type {!r}, needs {!r}".format(name, type(field), ftype))
+        exit(1)
 
-def load_config(fn):
-    with open(fn, 'r') as fh:
-        config  = json.load(fh)
-    sanity_check(config)
-    for key, val in DEFAULT_CONFIG.items():
-        if key not in config:
-            config[key] = val
-    return config
+    return field
 
-def _die(name, obj, join='for'):
-    log_error("invalid type %s '%s': %s" %
-            (join, name, obj), True)
+class Config:
+    __slots__ = (
+        'compression',
+        'backup',
+        'encrypted',
+        'test_archive',
+        'clear_recent',
+        'extensions',
+        'rename_extensions',
+        'skip_extensions',
+        'ignore_files',
+        'archive_dir',
+        'hasher',
+        'data_dir',
+        'tree_file',
+        'logs',
+        'use_trash',
+        'ask_confirmation',
+        'always_yes',
+        'dry_run',
+    )
 
-def _check_dict(real, expected, name):
-    for key in expected.keys():
-        if key not in real:
-            log_error("option '%s' in '%s' not defined" % (key, name))
+    @classmethod
+    def load(cls, fh):
+        return Config(yaml.safe_load(fh))
 
-    for key, val in real.items():
-        if key not in expected.keys():
-            log_warn("option '%s' in '%s' ignored" % (key, name))
-        if type(val) != expected[key]:
-            _die(key, expected[key], 'in')
+    def __init__(self, obj):
+        self.compression = Config.Compression(obj['compression'])
+        self.backup = _check(obj, 'backup', bool)
+        self.encrypted = _check(obj, 'encrypted', bool)
+        self.test_archive = _check(obj, 'test-archive', bool)
+        self.clear_recent = _check(obj, 'clear-recent', bool)
+        self.extensions = _check(obj, 'extensions', list)
+        self.rename_extensions = _check(obj, 'rename-extensions', dict)
+        self.skip_extensions = _check(obj, 'skin-extensions', list)
+        self.ignore_files = _check(obj, 'ignore-files', list)
+        self.archive_dir = _check(obj, 'archive-dir', str)
+        hash_algo = _check(obj, 'hash-algorithm', str)
+        self.data_dir = _check(obj, 'data-dir', str)
+        self.tree_file = _check(obj, 'tree-file', str)
+        self.logging = Config.Logging(obj['logging'])
+        self.use_trash = _check(obj, 'use-trash', bool)
+        self.ask_confirmation = _check(obj, 'ask-confirmation', bool)
+        self.always_yes = _check(obj, 'always-yes', bool)
+        self.dry_run = _check(obj, 'dry-run', bool)
 
-def _check_list(real, expected):
-    for it in real:
-        if type(it) != expected:
-            _die(it, expected, 'in')
-
-def sanity_check(config):
-    for key in config.keys():
         try:
-            true_type = CONFIG_TYPES[key]
-        except KeyError:
-            log_warn("config option ignored: %s" % key, True)
-            continue
+            self.hasher = getattr(hashlib, hash_algo)
+        except AttributeError:
+            log_error("No such hash algorithm: {}".format(hash_algo))
+            exit(1)
 
-        item = config[key]
-        if type(true_type) is tuple:
-            if type(item) != true_type[0]:
-                _die(key, type(item))
-            if true_type[1]:
-                if true_type[0] == dict:
-                    _check_dict(item, true_type[1], key)
-                else:
-                    _check_list(item, true_type[1])
-        else:
-            if type(item) != true_type:
-                _die(key, type(item))
-    for key in CONFIG_TYPES.keys():
-        if key not in config:
-            log_error("key '%s' not in config" % key)
+    class Compression:
+        __slots__ = (
+            'level',
+            'format',
+            'extension',
+        )
 
+        def __init__(self, obj):
+            self.level = _check(obj, 'level', int)
+            self.format = _check(obj, 'format', str)
+            self.extension = _check(obj, 'extension', str)
+
+            if self.level <= 0:
+                log_error("Invalid compression level: {}".format(self.level))
+                exit(1)
+
+    class Logging:
+        __slots__ = (
+            'duplicates',
+            'hashing',
+        )
+
+        def __init__(self, obj):
+            duplicates_fn = _check(obj, 'duplicates', str)
+            hashing_fn = _check(obj, 'hashing', str)
+
+            self.duplicates = open(duplicates_fn, 'w')
+            self.hashing = open(hasing_fn, 'w')
+
+        def __del__(self):
+            self.duplicates.close()
+            self.hashing.close()

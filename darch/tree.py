@@ -33,13 +33,13 @@ import os
 import pickle
 
 class Tree(object):
-    def __init__(self, main_dir, config, fops):
+    def __init__(self, main_dir, config, fsops):
         self.files = {}
         self.dirty = {}
         self.to_remove = []
         self.metadata_files = []
         self.hashes = {}
-        self.fops = fops
+        self.fsops = fsops
         self.config = config
         self.main_dir = main_dir
         self.data_dir = os.path.join(main_dir, self.config['data-dir'])

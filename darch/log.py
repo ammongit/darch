@@ -36,7 +36,7 @@ else:
     YELLOW_COLOR = ''
     RESET_COLOR  = ''
 
-class Logger(object):
+class Logger:
     def __init__(self):
         self.line_length = 0;
         self.needs_newline = False
@@ -49,20 +49,19 @@ class Logger(object):
             print(string)
         else:
             if log.line_length:
-                print("\r%s\r" % (' ' * log.line_length), end='')
+                print("\r{}\r".format(' ' * log.line_length), end='')
             print(string, end='')
             log.line_length = len(string)
             sys.stdout.flush()
         log.needs_newline = not perm
 
     def print_error(self, string):
-        self("%sError%s: %s" % (RED_COLOR, RESET_COLOR, string), True)
+        self("{}Error{}: {}".format(RED_COLOR, RESET_COLOR, string), True)
         exit(1)
 
     def print_warn(self, string):
-        self("%sWarning%s: %s" % (YELLOW_COLOR, RESET_COLOR, string), True)
+        self("{}Warning{}: {}".format(YELLOW_COLOR, RESET_COLOR, string), True)
 
 log = Logger()
 log_error = log.print_error
 log_warn = log.print_warn
-

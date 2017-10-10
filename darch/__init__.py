@@ -18,9 +18,7 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__all__ = [
-    'Archive',
-]
+__version__ = '0.5.0'
 
 from .archive import Archive
 
