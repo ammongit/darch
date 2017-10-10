@@ -1,8 +1,7 @@
 # Artifacts
 __pycache__
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*.log
 
 # Misc
 *.*.swp
