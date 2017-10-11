@@ -21,7 +21,6 @@
 __all__ = [
     'FsOps',
     'ReadOnlyFsOps',
-    'get_fsops',
 ]
 
 from .log import log_error
@@ -38,10 +37,28 @@ import shutil
 import subprocess
 
 class FsOps:
-    def __init__(self, use_trash=False):
+    __slots__ = (
+        'open',
+        'tree',
+        'use_trash',
+        'rename',
+    )
+
+    @staticmethod
+    def from_config(config) -> FsOps:
+        if config.dry_run:
+            return ReadOnlyFsOps()
+        else:
+            return FsOps(config.use_trash)
+
+    def __init__(self, tree, use_trash=False):
         self.open = open
+        self.tree = tree
         self.use_trash = use_trash
         self.rename = self.move
+
+    def normalize_path(self, path):
+        raise NotImplementedError
 
     def call(self, arguments, *args, **kwargs):
         return subprocess.call(arguments, *args, **kwargs)
@@ -108,10 +125,3 @@ class ReadOnlyFsOps(FsOps):
 
     def truncate(self, path, offset=0):
         print("<TRUNCATE> %s [%d]" % (path, offset))
-
-def get_fsops(config):
-    if config['dry-run']:
-        return ReadOnlyFsOps()
-    else:
-        return FsOps(config['use-trash'])
-

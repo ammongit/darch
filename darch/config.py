@@ -46,6 +46,7 @@ class Config:
         'compression',
         'backup',
         'encrypted',
+        'hash',
         'test_archive',
         'clear_recent',
         'extensions',
@@ -71,6 +72,7 @@ class Config:
         self.compression = Config.Compression(obj['compression'])
         self.backup = _check(obj, 'backup', bool)
         self.encrypted = _check(obj, 'encrypted', bool)
+        self.hash = _check(obj, 'hash', bool)
         self.test_archive = _check(obj, 'test-archive', bool)
         self.clear_recent = _check(obj, 'clear-recent', bool)
         self.extensions = _check(obj, 'extensions', list)

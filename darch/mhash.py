@@ -25,43 +25,47 @@ __all__ = [
 from .log import log
 from .util import elide
 
+from typing import Optional
 import binascii
 import os
 
-class MediaHasher(object):
-    def __init__(self, tree, fops, config):
-        self.tree = tree
-        self.fops = fops
+class MediaHasher:
+    __slots__ = (
+        'fsops',
+        'config',
+        'confirm_rest',
+        'queued',
+        'changed',
+        'extensions',
+    )
+
+    def __init__(self, fsops, config):
+        self.fsops = fsops
         self.config = config
         self.confirm_rest = False
-        self.changes = []
-        self.extensions = frozenset(config['extensions'])
+        self.queued = []
+        self.changed = []
+        self.extensions = frozenset(config.extensions)
 
-    def _rename_file(self, filename, hashsum):
-        parts = filename.split('.')
-        # No '.' in filename
-        if len(parts) == 1:
-            return None
-
-        # Rename specified extensions
-        base = '.'.join(parts[:-1])
-        ext = parts[-1].lower()
-        try:
-            ext = self.config['rename-extensions'][ext]
-        except KeyError:
-            pass
+    def _new_filename(self, filename, hashsum) -> Optional[str]:
+        name, ext = os.path.splitext(filename)
+        ext = self.config.rename_extensions.get(ext, ext)
 
         if ext not in self.extensions:
             return None
 
-        directory = os.path.dirname(base)
-        hashsum = binascii.hexlify(hashsum).decode('utf-8')
-        return os.path.join(directory, '.'.join((hashsum, ext)))
+        directory = os.path.dirname(name)
+        new_name = binascii.hexlify(hashsum).decode('utf-8')
+        filename = os.path.extsep.join(new_name, ext)
+        return os.path.join(directory, filename)
 
     def confirm(self, message="Ok"):
-        if self.config['always-yes'] or self.confirm_rest:
+        if self.config.always_yes or self.confirm_rest:
             return True
-        response = input(">> %s?\n[Y/n/a/q] " % message).lower().strip()
+
+        response = input(">> {}?\n[Y/n/a/q] ".format(message))
+        response = response.lower().strip()
+
         if response in ('', 'y', 'yes'):
             return True
         elif response in ('n', 'no'):
@@ -70,48 +74,39 @@ class MediaHasher(object):
             self.confirm_rest = True
             return True
         elif response in ('q', 'quit', 'exit'):
-            raise KeyboardInterrupt
+            exit(2)
         else:
             return False
 
-    def build_changes(self):
+    def build(self):
         log("Building hash changes...")
-        # TODO add changes from self.tree.dirty
-        for path, entry in self.tree.files.items():
-            ctime, mtime, hashsum = entry
+        for path, (ctime, mtime, hashsum) in self.tree.files.items():
             if self.tree.ignore.matches(path):
-                log("Ignoring %s..." % path)
+                log("Ignoring {}...".format(path))
                 continue
-            new_path = self._rename_file(path, hashsum)
+
+            new_path = self._new_filename(path, hashsum)
             if new_path is None or path == new_path:
                 continue
 
-            # Modify file tree
-            self.changes.append((path, new_path))
-            self.tree.to_remove.append(path)
-            self.tree.dirty[new_path] = entry
+            self.queued.append((path, new_path))
 
-    def apply_changes(self):
+    def apply(self):
         log("Applying hash changes...")
-        oldcwd = os.getcwd()
-        os.chdir(self.tree.main_dir)
-        to_log = []
-        for old_path, new_path in self.changes:
-            log("'%s' -> '%s'" % (old_path, elide(os.path.basename(new_path))), True)
-            to_log.append("\"%s\" -> \"%s\"" % (old_path, new_path))
+        for old_path, new_path in self.queued:
+            log("'{}' -> '{}'".format(old_path, elide(os.path.basename(new_path))), True)
             if os.path.exists(new_path):
-                if not self.confirm("Delete '%s'" % new_path):
+                if not self.confirm("Delete '{}'".format(new_path)):
                     continue
-                log("Removed '%s'." % new_path, True)
-                self.fops.remove(new_path)
+
+                log("Removed '{}'.".format(new_path), True)
+                self.fsops.remove(new_path)
             self.fops.rename(old_path, new_path)
-        self.changes = []
-        hashed_file = os.path.join(self.config['data-dir'], self.config['hash-log'])
-        with self.fops.open(hashed_file, 'a') as fh:
-            fh.write('~\n')
-            fh.write('\n'.join(to_log))
-        os.chdir(oldcwd)
+            self.changed.append((old_path, new_path))
+        self.queued = []
+
+        # Write to undo log
+        # TODO
 
     def undo(self):
         raise NotImplementedError
-

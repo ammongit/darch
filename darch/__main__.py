@@ -24,6 +24,7 @@ from .archive import Archive
 from .config import Config
 from .log import log, log_error
 
+from getpass import getpass
 import argparse
 import os
 import sys
@@ -46,6 +47,25 @@ def _override_cfg(config, args, attr):
     if value  is not None:
         setattr(args, attr, value)
 
+def print_operation(archv, args, name):
+    if archv.dir_exists():
+        if args.hash_only:
+            operation = 'Hashing'
+        elif args.full:
+            operation = 'Recreating'
+        elif archv.tar_exists():
+            operation = 'Creating'
+        else:
+            operation = 'Updating'
+    else:
+        if archv.tar_exists():
+            operation = 'Extracting'
+        else:
+            print("No archive at that location!")
+            exit(1)
+
+    log("[{}] {}".format(operation, name), True)
+
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Manage a hashed media archive.")
@@ -67,7 +87,7 @@ def main():
             dest='test_archive', action='store_true', default=None,
             help="Test the archive after modifying it.")
     parser.add_argument('-P', '--purge-logs',
-            dest='purge', action='store_true',
+            dest='purge_logs', action='store_true',
             help="Purge the archive's logs before doing anything.")
     parser.add_argument('-F', '--full',
             action='store_true',
@@ -96,51 +116,48 @@ def main():
         name = os.path.basename(archive)
         archv = Archive(archive, config)
 
+        print_operation(archv, args, name)
+
         if args.purge:
-            archv.purge()
+            archv.purge_logs()
 
-        if args.hash_only:
-            log("[Hashing] {}".format(name), True)
-            arch.hash()
-            arch.clear_recent()
-            continue
+        if archv.dir_exists():
+            archv.create_meta()
+            tree = archv.build_tree()
 
-        if archv.extracted():
-            archv.hash()
-            if archv.first():
-                log("[Creating] {}".format(name), True)
-                archv.create()
+            if args.hash_only:
+                archv.hash()
+                if config.clear_recent:
+                    archv.clear_recent()
+                continue
+
+            create = not archv.tar_exists() or args.full
+            passwd = getpass("Password: ")
+            if create:
+                passwd2 = getpass("Confirm: ")
+                if passwd != passwd2:
+                    print("Passwords do not match!")
+                    exit(1)
+
+            if config.hash:
+                archv.hash()
+
+            if config.backup:
+                archv.backup()
+
+            if create:
+                archv.tar_delete()
+                archv.tar_create(passwd)
             else:
+                archv.tar_update(passwd)
 
-                if args.full
+            if not args.update_only:
+                archv.dir_delete()
+        elif archv.tar_exists():
+            passwd = getpass("Password: ")
+            archv.tar_extract(passwd)
 
-
-###
-        if archv.extracted():
-            archv.hash()
-            if archv.first():
-                log("[Creating] %s" % name, True)
-                archv.create()
-            else:
-                if args.full:
-                    log("[Compressing] %s" % name, True)
-                else:
-                    log("[Updating] %s" % name, True)
-                if config['backup']:
-                    archv.backup()
-                if args.full:
-                    archv.invalidate()
-                    archv.scan()
-                    archv.create()
-                else:
-                    archv.update()
-                if not args.update_only:
-                    archv.delete()
-        else:
-            log("[Extracting] %s" % name, True)
-            archv.extract()
-
-        archv.clear_recent()
+    archv.clear_recent()
 
 if __name__ == '__main__':
     try:
