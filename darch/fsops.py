@@ -57,9 +57,6 @@ class FsOps:
         self.use_trash = use_trash
         self.rename = self.move
 
-    def normalize_path(self, path):
-        raise NotImplementedError
-
     def call(self, arguments, *args, **kwargs):
         return subprocess.call(arguments, *args, **kwargs)
 

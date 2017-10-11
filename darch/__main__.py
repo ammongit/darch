@@ -118,12 +118,12 @@ def main():
 
         print_operation(archv, args, name)
 
-        if args.purge:
-            archv.purge_logs()
-
         if archv.dir_exists():
-            archv.create_meta()
-            tree = archv.build_tree()
+            archv.open_meta()
+            archv.build_tree()
+
+            if args.purge:
+                archv.purge_logs()
 
             if args.hash_only:
                 archv.hash()

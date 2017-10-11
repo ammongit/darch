@@ -32,7 +32,7 @@ import hashlib
 import os
 import pickle
 
-class Tree(object):
+class Tree:
     def __init__(self, main_dir, config, fsops):
         self.files = {}
         self.dirty = {}

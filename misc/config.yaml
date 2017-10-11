@@ -14,6 +14,7 @@ clear-recent: false
 extensions:
   - aac
   - bmp
+  - flac
   - gif
   - jpeg
   - jpe
@@ -21,6 +22,7 @@ extensions:
   - m4a
   - mkv
   - mpeg
+  - mpg
   - mp3
   - mp4
   - ogg
@@ -36,6 +38,7 @@ extensions:
 rename-extensions:
   jpe: jpeg
   jpg: jpeg
+  mpg: mpeg
   tif: tiff
 
 skip-extensions:
@@ -46,7 +49,7 @@ ignore-files:
   - .ignore
   - _ignore
 
-archive-dir: .
+archive-dir: /path/where/you/store/archives
 hash-algorithm: sha224
 
 data-dir: .darch

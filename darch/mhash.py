@@ -46,12 +46,13 @@ class MediaHasher:
         self.queued = []
         self.changed = []
         self.extensions = frozenset(config.extensions)
+        self.skip_extensions = frozenset(config.skip_extensions)
 
     def _new_filename(self, filename, hashsum) -> Optional[str]:
         name, ext = os.path.splitext(filename)
         ext = self.config.rename_extensions.get(ext, ext)
 
-        if ext not in self.extensions:
+        if ext not in self.extensions or ext in self.skip_extensions:
             return None
 
         directory = os.path.dirname(name)
@@ -59,7 +60,7 @@ class MediaHasher:
         filename = os.path.extsep.join(new_name, ext)
         return os.path.join(directory, filename)
 
-    def confirm(self, message="Ok"):
+    def confirm(self, message='Ok'):
         if self.config.always_yes or self.confirm_rest:
             return True
 
