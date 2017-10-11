@@ -27,26 +27,32 @@ from .util import elide
 
 from typing import Optional
 import binascii
+import json
 import os
 
 class MediaHasher:
     __slots__ = (
+        'archv',
         'fsops',
         'config',
         'confirm_rest',
         'queued',
         'changed',
         'extensions',
+        'skip_extensions',
+        'undo_file',
     )
 
-    def __init__(self, fsops, config):
-        self.fsops = fsops
-        self.config = config
+    def __init__(self, arch):
+        self.archv = archv
+        self.fsops = archv.fsops
+        self.config = archv.config
         self.confirm_rest = False
         self.queued = []
-        self.changed = []
+        self.changed = {}
         self.extensions = frozenset(config.extensions)
         self.skip_extensions = frozenset(config.skip_extensions)
+        self.undo_file = os.path.join(self.archv.meta_dir, 'hashed.json')
 
     def _new_filename(self, filename, hashsum) -> Optional[str]:
         name, ext = os.path.splitext(filename)
@@ -103,11 +109,17 @@ class MediaHasher:
                 log("Removed '{}'.".format(new_path), True)
                 self.fsops.remove(new_path)
             self.fops.rename(old_path, new_path)
-            self.changed.append((old_path, new_path))
+            self.changed[old_path] = new_path
         self.queued = []
 
         # Write to undo log
-        # TODO
+        with self.fsops.open(self.undo_file, 'w') as fh:
+            json.dump(self.changed, fh)
 
     def undo(self):
-        raise NotImplementedError
+        with self.fsops.open(self.undo_file, 'r') as fh:
+            self.changed = json.load(fh)
+
+        for old_path, new_path in self.changed.items():
+            log("Undo: '{}' -> '{}'".format(new_path, elide(os.path.basename(old_path))), True)
+            self.fops.rename(new_path, old_path)

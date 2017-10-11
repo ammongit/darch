@@ -51,13 +51,7 @@ ignore-files:
 
 archive-dir: /path/where/you/store/archives
 hash-algorithm: sha224
-
 data-dir: .darch
-tree-file: tree.pickle
-
-logging:
-  duplicates: duplicates.log
-  hashing: hashed.log
 
 use-trash: false
 ask-confirmation: true

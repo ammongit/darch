@@ -30,6 +30,7 @@ class Archive:
     __slots__ = (
         'dir_path',
         'tar_path',
+        'meta_dir',
         'config',
         'fsops',
         'tree',
@@ -38,6 +39,7 @@ class Archive:
     def __init__(self, archive, config):
         self.dir_path = os.path.join(config.archive_dir, archive)
         self.tar_path = os.path.extsep.join(self.dir_path, config.compression.extension)
+        self.meta_dir = os.path.join(self.dir_path, config.data_dir)
         self.config = config
         self.fsops = FsOps.from_config(config)
         self.tree = Tree()

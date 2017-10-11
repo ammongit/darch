@@ -56,7 +56,6 @@ class Config:
         'archive_dir',
         'hasher',
         'data_dir',
-        'tree_file',
         'logs',
         'use_trash',
         'ask_confirmation',
@@ -82,8 +81,6 @@ class Config:
         self.archive_dir = _check(obj, 'archive-dir', str)
         hash_algo = _check(obj, 'hash-algorithm', str)
         self.data_dir = _check(obj, 'data-dir', str)
-        self.tree_file = _check(obj, 'tree-file', str)
-        self.logging = Config.Logging(obj['logging'])
         self.use_trash = _check(obj, 'use-trash', bool)
         self.ask_confirmation = _check(obj, 'ask-confirmation', bool)
         self.always_yes = _check(obj, 'always-yes', bool)
@@ -110,20 +107,3 @@ class Config:
             if self.level <= 0:
                 log_error("Invalid compression level: {}".format(self.level))
                 exit(1)
-
-    class Logging:
-        __slots__ = (
-            'duplicates',
-            'hashing',
-        )
-
-        def __init__(self, obj):
-            duplicates_fn = _check(obj, 'duplicates', str)
-            hashing_fn = _check(obj, 'hashing', str)
-
-            self.duplicates = open(duplicates_fn, 'w')
-            self.hashing = open(hasing_fn, 'w')
-
-        def __del__(self):
-            self.duplicates.close()
-            self.hashing.close()
