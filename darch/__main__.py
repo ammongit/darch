@@ -20,21 +20,8 @@
 
 __all__ = []
 
-DESCRIPTION    = "Manage a hashed media archive."
-HELP_CONFIG    = "Specify the configuration file."
-HELP_DIRECTORY = "Switch to this directory before running anything."
-HELP_DRYRUN    = "Don't actually do anything, just print the results."
-HELP_UPDATE    = "Update the archive only, leaving the files extracted."
-HELP_HASHONLY  = "Only run the media hash. Do not affect the archive. Ignores any -u options set."
-HELP_TEST      = "Test the archive after modifying it."
-HELP_FULL      = "Recreate the full archive. Doesn't use the difference algorithm."
-HELP_BACKUP    = "Back up the archive before modifying it."
-HELP_YES       = "Automatically answer 'yes' to every question prompt."
-HELP_PURGELOGS = "Clean out the log files created by the archiver before running."
-HELP_ARGUMENTS = "The archives you wish to operate on."
-
 from .archive import Archive
-from .config import default_config, load_config
+from .config import Config
 from .log import log, log_error
 
 import argparse
@@ -42,61 +29,93 @@ import os
 import sys
 
 def config_path():
-    path = "%s/darch.json" % os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
-    if os.path.exists(path):
-        return path
-    else:
-        return None
+    try:
+        config_home = os.environ['XDG_CONFIG_HOME']
+    except KeyError:
+        config_home = os.path.expanduser('~/.config')
+
+    path = os.path.join(config_home, 'darch.yaml')
+    if not os.path.exists:
+        log_error("Cannot find default darch config {}".format(path))
+        exit(1)
+
+    return path
+
+def _override_cfg(config, args, attr):
+    value = getattr(args, attr)
+    if value  is not None:
+        setattr(args, attr, value)
 
 def main():
-    parser = argparse.ArgumentParser(description=DESCRIPTION)
-    parser.add_argument('-c', '--config', help=HELP_CONFIG)
-    parser.add_argument('-d', '--directory', default=None, help=HELP_DIRECTORY)
-    parser.add_argument('-n', '--dry-run', action='store_true', default=None, help=HELP_DRYRUN)
-    parser.add_argument('-u', '--update-only', action='store_true', help=HELP_UPDATE)
-    parser.add_argument('-m', '--hash-only', action='store_true', help=HELP_HASHONLY)
-    parser.add_argument('-t', '--test', action='store_true', default=None, help=HELP_TEST)
-    parser.add_argument('-F', '--full', action='store_true', help=HELP_FULL)
-    parser.add_argument('-b', '--no-backup', action='store_false', default=None, help=HELP_BACKUP)
-    parser.add_argument('-y', '--always-yes', action='store_true', default=None, help=HELP_YES)
-    parser.add_argument('-P', '--purge-logs', action='store_true', help=HELP_PURGELOGS)
-    parser.add_argument('archive-dir', nargs='+', help=HELP_ARGUMENTS)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Manage a hashed media archive.")
+
+    parser.add_argument('-c', '--config',
+            help="Specify the configuration file.")
+    parser.add_argument('-d', '--directory',
+            help="Switch to this directory before running anything.")
+    parser.add_argument('-n', '--dry-run',
+            dest='dry_run', action='store_true', default=None,
+            help="Don't actually do anything, just print the results.")
+    parser.add_argument('-u', '--update-only',
+            dest='update_only', action='store_true',
+            help="Update the archive only, leaving the files extracted.")
+    parser.add_argument('-m', '--hash-only',
+            dest='hash_only', action='store_true',
+            help="Only run the media hash. Do not affect the archive. Ignores any -u options set.")
+    parser.add_argument('-t', '--test',
+            dest='test_archive', action='store_true', default=None,
+            help="Test the archive after modifying it.")
+    parser.add_argument('-P', '--purge-logs',
+            dest='purge', action='store_true',
+            help="Purge the archive's logs before doing anything.")
+    parser.add_argument('-F', '--full',
+            action='store_true',
+            help="Recreate the full archive. Doesn't use the difference algorithm.")
+    parser.add_argument('-b', '--no-backup',
+            action='store_false', default=None,
+            help="Back up the archive before modifying it.")
+    parser.add_argument('-y', '--always-yes',
+            dest='always_yes', action='store_true', default=None,
+            help="Automatically answer 'yes' to every question prompt.")
+    parser.add_argument('archive-dir', nargs='+',
+            dest='archives',
+            help="The archives you wish to operate on.")
     args = parser.parse_args()
+    config = Config.load(args.config or config_path())
 
-    archives = getattr(args, 'archive-dir')
-    if args.config:
-        config = load_config(args.config)
-    else:
-        path = config_path()
-        if path:
-            config = load_config(path)
-        else:
-            config = default_config()
+    # Override config options from args
+    for attr in ('dry_run', 'always_yes', 'test_archive', 'backup'):
+        _override_cfg(config, args, attr)
 
-    if args.dry_run is not None:
-        config['dry-run'] = args.dry_run
-    if args.always_yes is not None:
-        config['always-yes'] = args.always_yes
-    if args.test is not None:
-        config['test-archive'] = args.test
-    if args.no_backup is not None:
-        config['backup'] = args.no_backup
+    if args.directory is not None:
+        os.chdir(args.directory)
 
-    for archive in archives:
+    # Operate on each of the passed archives
+    for archive in args.archives:
         name = os.path.basename(archive)
-        if args.directory:
-            os.chdir(args.directory)
         archv = Archive(archive, config)
 
-        if args.purge_logs:
+        if args.purge:
             archv.purge()
 
         if args.hash_only:
-            log("[Hashing] %s" % name, True)
-            archv.hash()
-            archv.clear_recent()
-            exit()
+            log("[Hashing] {}".format(name), True)
+            arch.hash()
+            arch.clear_recent()
+            continue
 
+        if archv.extracted():
+            archv.hash()
+            if archv.first():
+                log("[Creating] {}".format(name), True)
+                archv.create()
+            else:
+
+                if args.full
+
+
+###
         if archv.extracted():
             archv.hash()
             if archv.first():

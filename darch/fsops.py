@@ -21,7 +21,7 @@
 __all__ = [
     'FsOps',
     'ReadOnlyFsOps',
-    'get_fops',
+    'get_fsops',
 ]
 
 from .log import log_error
@@ -109,7 +109,7 @@ class ReadOnlyFsOps(FsOps):
     def truncate(self, path, offset=0):
         print("<TRUNCATE> %s [%d]" % (path, offset))
 
-def get_interface(config):
+def get_fsops(config):
     if config['dry-run']:
         return ReadOnlyFsOps()
     else:

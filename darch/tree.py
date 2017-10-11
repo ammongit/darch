@@ -169,4 +169,3 @@ class Tree(object):
         if type(obj) != dict:
             log_error("Unpickled object is not a dict.")
         self.files = obj
-

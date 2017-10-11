@@ -22,19 +22,18 @@ __all__ = [
     'Archive',
 ]
 
-from .config import default_config
-from .fops import get_fops
-from .log import log, log_error
-from .tree import Tree
-
 from getpass import getpass
 import glob
 import os
 import subprocess
 
-class Archive(object):
-    def __init__(self, dir_path, config=None):
-        self.config = default_config if config is None else config
+from .fsops import get_fsops
+from .log import log, log_error
+from .tree import Tree
+
+class Archive:
+    def __init__(self, dir_path, config):
+        self.config = config
         self.work_path = os.path.basename(dir_path)
         self.dir_path = dir_path
         tarball_name = '.'.join((dir_path, self.config['compression']['extension']))

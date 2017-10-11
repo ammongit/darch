@@ -31,4 +31,3 @@ def elide(path, width=85, end='...'):
 
 def plural(amount):
     return '' if amount == 1 else 's'
-
