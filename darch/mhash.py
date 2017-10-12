@@ -27,7 +27,6 @@ from .util import elide
 
 from typing import Optional
 import binascii
-import json
 import os
 
 class MediaHasher:
@@ -40,7 +39,6 @@ class MediaHasher:
         'changed',
         'extensions',
         'skip_extensions',
-        'undo_file',
     )
 
     def __init__(self, arch):
@@ -52,7 +50,6 @@ class MediaHasher:
         self.changed = {}
         self.extensions = frozenset(config.extensions)
         self.skip_extensions = frozenset(config.skip_extensions)
-        self.undo_file = os.path.join(self.archv.meta_dir, 'hashed.json')
 
     def _new_filename(self, filename, hashsum) -> Optional[str]:
         name, ext = os.path.splitext(filename)
@@ -113,12 +110,11 @@ class MediaHasher:
         self.queued = []
 
         # Write to undo log
-        with self.fsops.open(self.undo_file, 'w') as fh:
-            json.dump(self.changed, fh)
+        self.archv.meta.hashed = self.changed
 
     def undo(self):
-        with self.fsops.open(self.undo_file, 'r') as fh:
-            self.changed = json.load(fh)
+        # Read from undo log
+        self.changed = self.archv.meta.hashed
 
         for old_path, new_path in self.changed.items():
             log("Undo: '{}' -> '{}'".format(new_path, elide(os.path.basename(old_path))), True)

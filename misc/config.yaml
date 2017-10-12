@@ -50,6 +50,7 @@ ignore-files:
   - _ignore
 
 archive-dir: /path/where/you/store/archives
+extract-dir: .
 hash-algorithm: sha224
 data-dir: .darch
 

@@ -18,9 +18,12 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .fsops import FsOps
-from .tree import Tree
 import os
+
+from .fsops import FsOps
+from .log import log, log_error
+from .meta import Meta
+from .tree import Tree
 
 __all__ = [
     'Archive',
@@ -34,15 +37,21 @@ class Archive:
         'config',
         'fsops',
         'tree',
+        'meta',
     )
 
     def __init__(self, archive, config):
-        self.dir_path = os.path.join(config.archive_dir, archive)
-        self.tar_path = os.path.extsep.join(self.dir_path, config.compression.extension)
+        tar = os.path.extsep.join(archive, config.compression.extension)
+        self.tar_path = os.path.join(config.archive_dir, tar)
+        if os.path.isabs(config.extract_dir):
+            self.dir_path = os.path.join(config.extract_dir, archive)
+        else:
+            self.dir_path = os.path.join(config.archive_dir, config.extract_dir, archive)
         self.meta_dir = os.path.join(self.dir_path, config.data_dir)
         self.config = config
         self.fsops = FsOps.from_config(config)
         self.tree = Tree()
+        self.meta = Meta()
 
     def open_meta(self):
         raise NotImplementedError
@@ -75,4 +84,27 @@ class Archive:
         self.fsops.remove(self.tar_path)
 
     def tar_extract(self, passwd):
-        raise NotImplementedError
+        log("Extracting archive...", True)
+        arguments = [
+            '7z',
+            'x',
+            '-t{}'.format(self.config.compression.format),
+            self.tar_path,
+        ]
+        if self.fsops.call(arguments, cwd=
+
+    def tar_test(self, passwd):
+        log("Testing archive...", True)
+        arguments = [
+            '7z',
+            't',
+            '-t{}'.format(self.config.compression.format),
+        ]
+
+        if self.config.encrypted:
+            arguments.append('-p{}'.format(passwd))
+
+        arguments.append(self.tar_path)
+
+        if self.fsops.call(arguments):
+            log_error("Archive failed consistency test!")

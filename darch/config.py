@@ -79,6 +79,7 @@ class Config:
         self.skip_extensions = _check(obj, 'skin-extensions', list)
         self.ignore_files = _check(obj, 'ignore-files', list)
         self.archive_dir = _check(obj, 'archive-dir', str)
+        self.extract_dir = _check(obj, 'extract-dir', str)
         hash_algo = _check(obj, 'hash-algorithm', str)
         self.data_dir = _check(obj, 'data-dir', str)
         self.use_trash = _check(obj, 'use-trash', bool)
