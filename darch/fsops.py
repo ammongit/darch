@@ -81,21 +81,25 @@ class FsOps:
     def truncate(self, path, offset=0):
         os.truncate(path, offset)
 
+def _bin_open(path, mode):
+    try:
+        with open(path, 'rb') as fh:
+            data = fh.read()
+    except IOError:
+        data = b''
+    return io.BytesIO(data)
+
+def _str_open(path, mode):
+    try:
+        with open(path, 'r') as fh:
+            text = fh.read()
+    except IOError:
+        text = ''
+    return io.StringIO(text)
+
 def _dummy_open(path, mode='r'):
-    if 'b' in mode:
-        try:
-            with open(path, 'rb') as fh:
-                data = fh.read()
-        except IOError:
-            data = b''
-        return io.BytesIO(data)
-    else:
-        try:
-            with open(path, 'r') as fh:
-                text = fh.read()
-        except IOError:
-            text = ''
-        return io.StringIO(text)
+    func = _bin_open if 'b' in mode else _str_open
+    return func(path, mode)
 
 class ReadOnlyFsOps(FsOps):
     def __init__(self):
