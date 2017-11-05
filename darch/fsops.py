@@ -73,7 +73,7 @@ class FsOps:
             os.remove(path)
 
     def remove_dir(self, path):
-        shutil.rmtree(path)
+        shutil.rmtree(path, ignore_errors=True)
 
     def mkdir(self, path):
         os.mkdir(path)

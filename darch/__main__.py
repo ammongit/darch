@@ -119,7 +119,6 @@ def main():
         print_operation(archv, args, name)
 
         if archv.dir_exists():
-            archv.open_meta()
             archv.build_tree()
 
             if args.purge:

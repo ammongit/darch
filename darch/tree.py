@@ -18,13 +18,49 @@
 # along with darch.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import os
+
+from .log import log
+from .util import elide
+
 __all__ = [
+    'FileAttrs',
     'Tree',
 ]
 
-class Tree:
+class FileAttrs:
     __slots__ = (
+        'path',
+        'ctime',
+        'mtime',
+        'hashsum',
     )
 
-    def __init__(self):
-        pass
+    def __init__(self, path, ctime, mtime, hashsum):
+        self.path = path
+        self.ctime = ctime
+        self.mtime = mtime
+        self.hashsum = hashsum
+
+class Tree:
+    __slots__ = (
+        'path',
+        'fsops',
+        'files',
+    )
+
+    def __init__(self, path, meta, config, fsops):
+        self.path = path
+        self.fsops = fsops
+
+        for dirpath, dirnames, filenames in os.walk(path):
+            log("Scanning {}...".format(elide(dirpath, end='')))
+            if os.path.basename(dirpath) == self.config.data_dir:
+                continue
+
+            for filename in filenames:
+                full_path = os.path.join(path, dirpath, filename)
+                if filename in self.config.ignore_files:
+                    with # add to ignore
+                self.files[full_path] = FileAttrs(full_path, config.hasher, fsops)
+                # if mtime or ctime change, recheck hash

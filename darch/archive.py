@@ -36,8 +36,8 @@ class Archive:
         'meta_dir',
         'config',
         'fsops',
-        'tree',
         'meta',
+        'tree',
     )
 
     def __init__(self, archive, config):
@@ -50,14 +50,27 @@ class Archive:
         self.meta_dir = os.path.join(self.dir_path, config.data_dir)
         self.config = config
         self.fsops = FsOps.from_config(config)
-        self.tree = Tree()
-        self.meta = Meta()
-
-    def open_meta(self):
-        raise NotImplementedError
+        self.meta = Meta(self.dir_path, self.fsops)
+        self.tree = Tree(self.dir_path, self.meta)
 
     def clear_recent(self):
-        raise NotImplementedError
+        paths = (
+            os.path.expanduser('~/.cache/thumbnails/normal'),
+            os.path.expanduser('~/.cache/thumbnails/large'),
+            os.path.expanduser('~/.thumbnails/normal'),
+            os.path.expanduser('~/.thumbnails/large'),
+            os.path.expanduser('~/.local/share/recently-used.xbel'),
+            os.path.expanduser('~/.local/share/user-places.xbel'),
+        )
+
+        for path in paths:
+            if not os.path.exists(path):
+                continue
+
+            if os.path.isdir(path):
+                self.fsops.remove_dir(path)
+            else:
+                self.fsops.remove(path)
 
     def purge_logs(self):
         raise NotImplementedError
@@ -81,6 +94,7 @@ class Archive:
         raise NotImplementedError
 
     def tar_delete(self):
+        log("Deleting archive...", True)
         self.fsops.remove(self.tar_path)
 
     def tar_extract(self, passwd):

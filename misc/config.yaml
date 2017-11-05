@@ -42,8 +42,8 @@ rename-extensions:
   tif: tiff
 
 skip-extensions:
+  - json
   - yaml
-  - pickle
 
 ignore-files:
   - .ignore
